@@ -15,7 +15,7 @@ describe('Type System Correctness Properties', () => {
     fc.assert(fc.property(
       fc.constantFrom('XLM', 'USDC', 'USDT'),
       fc.constantFrom('NGN', 'USD', 'GBP'),
-      fc.float({ min: 0.01, max: 10000 }),
+      fc.double({ min: 0.01, max: 10000, noNaN: true }),
       (assetCode, currencyCode, amount) => {
         const assets = pricingService.getAssets()
         expect(assets).toBeInstanceOf(Array)
@@ -67,7 +67,7 @@ describe('Type System Correctness Properties', () => {
   it('Property 5: Conversion operations maintain numerical integrity', () => {
     fc.assert(fc.property(
       fc.constantFrom('NGN', 'USD', 'GBP'),
-      fc.float({ min: 0.01, max: 1000, noNaN: true }),
+      fc.double({ min: 0.01, max: 1000, noNaN: true }),
       (toCurrency, amount) => {
         if (toCurrency !== 'USD') {
           const converted = fiatService.convertCurrency('USD', toCurrency as any, amount)

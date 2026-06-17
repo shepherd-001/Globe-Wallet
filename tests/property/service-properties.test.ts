@@ -12,7 +12,7 @@ describe('Service Interface Compliance Properties', () => {
   it('Property 1: PricingService should handle all operations correctly', () => {
     fc.assert(fc.property(
       fc.constantFrom('XLM', 'USDC', 'USDT'),
-      fc.float({ min: 0.01, max: 10000 }),
+      fc.double({ min: 0.01, max: 10000, noNaN: true }),
       (assetCode, amount) => {
         const assets = pricingService.getAssets()
         expect(Array.isArray(assets)).toBe(true)
@@ -28,7 +28,7 @@ describe('Service Interface Compliance Properties', () => {
   it('Property 1: FiatService should handle all operations correctly', () => {
     fc.assert(fc.property(
       fc.constantFrom('NGN', 'USD', 'GBP'),
-      fc.float({ min: 0.01, max: 100000 }),
+      fc.double({ min: 0.01, max: 100000, noNaN: true }),
       (currency, amount) => {
         const wallets = fiatService.getWallets()
         expect(Array.isArray(wallets)).toBe(true)

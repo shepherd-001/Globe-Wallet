@@ -10,7 +10,7 @@ describe('Error Handling Properties', () => {
   it('Property 4: Services should handle invalid inputs gracefully', () => {
     fc.assert(fc.property(
       fc.string({ maxLength: 10 }).filter(s => !['XLM', 'USDC', 'USDT'].includes(s)),
-      fc.float({ min: 0.01, max: 1000 }),
+      fc.double({ min: 0.01, max: 1000, noNaN: true }),
       (invalidAsset, amount) => {
         expect(() => {
           assetService.convertAsset(invalidAsset as any, 'XLM', amount)
@@ -22,7 +22,7 @@ describe('Error Handling Properties', () => {
   it('Property 4: FiatService should handle invalid currencies', () => {
     fc.assert(fc.property(
       fc.string({ maxLength: 5 }).filter(s => !['NGN', 'USD', 'GBP', 'EUR'].includes(s)),
-      fc.float({ min: 0.01, max: 1000 }),
+      fc.double({ min: 0.01, max: 1000, noNaN: true }),
       (invalidCurrency, amount) => {
         expect(() => {
           fiatService.convertCurrency(invalidCurrency as any, 'USD', amount)
