@@ -23,6 +23,12 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Lint
+      run: npm run lint
+
+    - name: Typecheck and build
+      run: npm run build
+
     - name: Run unit tests
       run: npm run test:unit
 
@@ -32,8 +38,14 @@ jobs:
     - name: Run integration tests
       run: npm run test:integration
 
+    - name: Run coverage
+      run: npm run test:coverage
+
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
+
+    - name: Run E2E tests (issue #30 dashboard)
+      run: npm run test:e2e -- --grep "Issue #30"
 
     - name: Run E2E tests (send flow)
       run: npm run test:e2e -- --grep "Send Flow"
@@ -47,9 +59,15 @@ jobs:
     needs: test
 
     steps:
-    - name: Send merge analytics (issue-23)
+    - name: Send merge analytics (issue-30)
+      env:
+        MERGE_ANALYTICS_URL: ${{ secrets.MERGE_ANALYTICS_URL }}
       run: |
-        curl -X POST "${{ secrets.MERGE_ANALYTICS_URL }}" \
+        if [ -z "$MERGE_ANALYTICS_URL" ]; then
+          echo "MERGE_ANALYTICS_URL secret not configured; skipping analytics POST"
+          exit 0
+        fi
+        curl -X POST "$MERGE_ANALYTICS_URL" \
           -H "Content-Type: application/json" \
           -d '{
             "event": "merge",
@@ -58,7 +76,7 @@ jobs:
             "commit": "${{ github.sha }}",
             "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",
             "author": "${{ github.actor }}",
-            "issue": 23,
+            "issue": 30,
             "status": "success",
             "coverage_verified": true
           }'

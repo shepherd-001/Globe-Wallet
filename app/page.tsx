@@ -3,6 +3,7 @@ import { BalanceCard } from "@/components/app/balance-card"
 import { QuickActions } from "@/components/app/quick-actions"
 import { CryptoHoldings } from "@/components/app/crypto-holdings"
 import { TransactionList } from "@/components/app/transaction-list"
+import { StatsCards } from "@/components/dashboard/stats-cards"
 import { savingsGoals, formatMoney } from "@/lib/finance-data"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
@@ -14,6 +15,12 @@ export default function HomePage() {
     <AppShell>
       <BalanceCard />
       <QuickActions />
+
+      <section className="hidden px-4 pt-6 md:block" data-testid="dashboard-overview">
+        <h2 className="mb-3 text-sm font-semibold text-foreground">Portfolio overview</h2>
+        <StatsCards />
+      </section>
+
       <CryptoHoldings />
 
       <section className="px-4 pt-6">

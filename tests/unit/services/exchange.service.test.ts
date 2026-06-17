@@ -7,20 +7,12 @@ describe('ExchangeService', () => {
         service = new ExchangeService()
     })
 
-    describe('getCurrentRates', () => {
-        it('should return current exchange rates', async () => {
-            const rates = await service.getCurrentRates()
-            expect(rates).toHaveProperty('XLM')
-            expect(rates).toHaveProperty('USDC')
-        })
-    })
-
     describe('estimateSwap', () => {
         it('should provide estimate for a valid swap', async () => {
             const estimate = await service.estimateSwap('XLM', 'USDC', 100)
             expect(estimate.fromAmount).toBe(100)
-            expect(estimate.toAmount).toBeLessThan(100) // Since XLM < USDC
-            expect(estimate.rate).toBeDefined()
+            expect(estimate.toAmount).toBeLessThan(100)
+            expect(estimate.priceImpact).toBeDefined()
         })
     })
 

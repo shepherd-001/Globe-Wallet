@@ -27,7 +27,7 @@ export function CryptoHoldings() {
       <Card className="divide-y divide-border p-0">
         {cryptoAssets.map((asset) => {
           const usdValue = asset.balance * asset.priceUsd
-          const up = asset.changePct >= 0
+          const up = (asset.changePct ?? asset.change24h) >= 0
           return (
             <div key={asset.code} className="flex items-center gap-3 px-4 py-3">
               <span
@@ -49,7 +49,7 @@ export function CryptoHoldings() {
                   ${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   <span className={cn("flex items-center", up ? "text-primary" : "text-destructive")}>
                     {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {Math.abs(asset.changePct)}%
+                    {Math.abs(asset.changePct ?? asset.change24h)}%
                   </span>
                 </p>
               </div>

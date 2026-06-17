@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { NextRequest } from 'next/server'
 import { GET as assetsGET, POST as assetsPOST } from '../../app/api/assets/route'
 import { GET as walletsGET, POST as walletsPOST } from '../../app/api/wallets/route'
@@ -11,6 +14,13 @@ jest.mock('../../lib/services/container', () => ({
         { code: 'XLM', name: 'Stellar Lumens', balance: 1000, priceUsd: 0.10 }
       ]),
       getAssetPrice: jest.fn().mockResolvedValue(0.10)
+    },
+    pricing: {
+      getAssets: jest.fn().mockReturnValue([
+        { code: 'XLM', name: 'Stellar Lumens', balance: 1000, priceUsd: 0.10 }
+      ]),
+      getPrice: jest.fn().mockResolvedValue(0.10),
+      formatAsset: jest.fn(),
     },
     fiat: {
       getWallets: jest.fn().mockReturnValue([

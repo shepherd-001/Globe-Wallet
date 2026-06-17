@@ -3,7 +3,7 @@ import { financeServices } from '../../../lib/services/container'
 
 export async function GET() {
   try {
-    const assets = financeServices.asset.getAssets()
+    const assets = financeServices.pricing.getAssets()
     return NextResponse.json({ success: true, data: assets })
   } catch (error) {
     return NextResponse.json(
@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { assetCode } = await request.json()
-    const price = await financeServices.asset.getAssetPrice(assetCode)
+    const price = await financeServices.pricing.getPrice(assetCode)
     return NextResponse.json({ success: true, data: { assetCode, price } })
   } catch (error) {
     return NextResponse.json(

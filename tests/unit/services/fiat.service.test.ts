@@ -1,5 +1,5 @@
 import { FiatService } from '../../../lib/services/fiat.service'
-import { FiatServiceError } from '../../../lib/types'
+import { StellarServiceError } from '../../../lib/types'
 
 describe('FiatService', () => {
   let service: FiatService
@@ -41,19 +41,14 @@ describe('FiatService', () => {
 
     it('should throw error for invalid conversion', () => {
       expect(() => service.convertCurrency('INVALID' as any, 'USD', 100))
-        .toThrow(FiatServiceError)
+        .toThrow(StellarServiceError)
     })
   })
 
-  describe('getExchangeRate', () => {
-    it('should return correct exchange rate', () => {
-      const rate = service.getExchangeRate('USD', 'NGN')
-      expect(rate).toBe(1580.5)
-    })
-
-    it('should throw error for invalid rate request', () => {
-      expect(() => service.getExchangeRate('INVALID' as any, 'USD'))
-        .toThrow(FiatServiceError)
+  describe('getAccountBalance', () => {
+    it('should return aggregate USD balance', () => {
+      const balance = service.getAccountBalance()
+      expect(balance).toBeGreaterThan(0)
     })
   })
 })

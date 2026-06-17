@@ -40,6 +40,7 @@ This repository is linked to a [v0](https://v0.app) project for rapid developmen
 - [Architecture Overview](docs/architecture.md) - Deep dive into the service-oriented architecture.
 - [Enterprise Upgrade (Issue #27)](docs/issue-27.md) - Details on the v1.2.0 upgrade, including API contracts and design rationale.
 - [Send Form: Contact Selection & Confirmation (Issue #23)](docs/issue-23.md) - Two-step send flow, contact picker, API contracts, and test instructions.
+- [Dashboard Integration & Testing Strategy (Issue #30)](docs/issue-30.md) - Service-layer home dashboard wiring, `/api/transactions`, test matrix, and CI coverage goals.
 
 [Continue working on v0 →](https://v0.app/chat/projects/prj_Z6moUc7brx5QzV1vPHQC842r9sYK)
 
@@ -126,6 +127,28 @@ STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
 5. Open a Pull Request
 
 ## Testing
+
+### Testing strategy
+
+Globe Wallet targets **>90% coverage** on business logic in `lib/`, `hooks/`, and `components/` (see `jest.config.js`). Full details, API contracts, and the QA checklist live in [docs/issue-30.md](docs/issue-30.md).
+
+| Command | Purpose |
+|---------|---------|
+| `npm test` | Full Jest suite (unit, component, integration, property) |
+| `npm run test:unit` | Service and utility unit tests |
+| `npm run test:component` | React Testing Library component tests |
+| `npm run test:integration` | API routes and service integration |
+| `npm run test:coverage` | Coverage report with 90% global threshold |
+| `npm run test:e2e` | Playwright end-to-end tests |
+| `npm run lint` | ESLint |
+| `npm run build` | Production build verification |
+
+**E2E highlights**
+
+- Send flow (issue #23): `npm run test:e2e -- --grep "Send Flow"`
+- Dashboard integration (issue #30): `npm run test:e2e -- --grep "Issue #30"`
+
+CI runs lint, build, all Jest layers, Playwright, and coverage on every push/PR to `main`. Successful merges to `main` POST merge analytics to `MERGE_ANALYTICS_URL` (repository secret).
 
 ### Browser Testing
 All wallet flows are verified in supported browsers:

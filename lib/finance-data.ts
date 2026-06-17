@@ -6,9 +6,9 @@
 import { CurrencyCode, AssetCode, Wallet, CryptoAsset, Transaction, Contact, SavingsGoal, PaymentCard } from './types'
 
 export const wallets: Wallet[] = [
-  { id: 'w1', code: "NGN", name: "Nigerian Naira", balance: 1284500.75, color: "bg-green-500" },
-  { id: 'w2', code: "USD", name: "US Dollar", balance: 4820.4, color: "bg-blue-500" },
-  { id: 'w3', code: "GBP", name: "British Pound", balance: 1290.0, color: "bg-indigo-500" },
+  { id: 'w1', code: "NGN", name: "Nigerian Naira", label: "Naira", balance: 1284500.75, color: "bg-green-500", symbol: "₦", changePct: 2.4 },
+  { id: 'w2', code: "USD", name: "US Dollar", label: "Dollar", balance: 4820.4, color: "bg-blue-500", symbol: "$", changePct: 1.1 },
+  { id: 'w3', code: "GBP", name: "British Pound", label: "Pound", balance: 1290.0, color: "bg-indigo-500", symbol: "£", changePct: -0.6 },
 ]
 
 export const transactions: Transaction[] = [
@@ -19,7 +19,11 @@ export const transactions: Transaction[] = [
     asset: "XLM",
     address: "GDXSPAY...",
     date: "Today, 09:42",
-    status: "completed"
+    status: "completed",
+    name: "Adaeze Okoro",
+    detail: "Transfer from @adaeze",
+    category: "transfer",
+    currency: "NGN",
   },
   {
     id: "t2",
@@ -28,8 +32,38 @@ export const transactions: Transaction[] = [
     asset: "XLM",
     address: "GDXSPAY...",
     date: "Today, 08:15",
-    status: "completed"
-  }
+    status: "completed",
+    name: "MTN Airtime",
+    detail: "Mobile top-up",
+    category: "airtime",
+    currency: "NGN",
+  },
+  {
+    id: "t3",
+    type: "send",
+    amount: 150,
+    asset: "USDC",
+    address: "GABC...XYZ1",
+    date: "Yesterday",
+    status: "completed",
+    name: "Netflix",
+    detail: "Subscription",
+    category: "bills",
+    currency: "USD",
+  },
+  {
+    id: "t4",
+    type: "receive",
+    amount: 500,
+    asset: "USDC",
+    address: "GDXSPAY...",
+    date: "Yesterday",
+    status: "completed",
+    name: "Salary deposit",
+    detail: "Monthly payroll",
+    category: "deposit",
+    currency: "USD",
+  },
 ]
 
 export const contacts: Contact[] = [
@@ -44,6 +78,7 @@ export const cryptoAssets: CryptoAsset[] = [
     balance: 4250.5,
     priceUsd: 0.1185,
     change24h: 4.7,
+    changePct: 4.7,
     color: "bg-foreground",
   },
   {
@@ -52,6 +87,7 @@ export const cryptoAssets: CryptoAsset[] = [
     balance: 1820.0,
     priceUsd: 1.0,
     change24h: 0.0,
+    changePct: 0.0,
     color: "bg-primary",
   },
   {
@@ -60,12 +96,15 @@ export const cryptoAssets: CryptoAsset[] = [
     balance: 540.25,
     priceUsd: 1.0,
     change24h: 0.01,
+    changePct: 0.01,
     color: "bg-accent",
   },
 ]
 
+export const TEST_STELLAR_ADDRESS = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
+
 export const stellarAccount = {
-  publicKey: "GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX",
+  publicKey: TEST_STELLAR_ADDRESS,
   memo: "STLP-2048",
   network: "Stellar Public Network",
 }

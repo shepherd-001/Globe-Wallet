@@ -5,6 +5,8 @@
 
 export type AssetCode = 'XLM' | 'USDC' | 'USDT' | 'NGN' | 'USD' | 'EUR'
 export type CurrencyCode = 'NGN' | 'USD' | 'EUR' | 'GBP'
+export type TransactionCategory = 'transfer' | 'airtime' | 'bills' | 'savings' | 'card' | 'deposit'
+export type TransactionDirection = 'in' | 'out'
 
 export interface StellarAccount {
   publicKey: string
@@ -15,9 +17,13 @@ export interface StellarAccount {
 export interface Wallet {
   id: string
   name: string
+  /** Display label; defaults to `name` in UI helpers */
+  label?: string
   code: CurrencyCode
   balance: number
   color: string
+  symbol?: string
+  changePct?: number
 }
 
 export interface CryptoAsset {
@@ -26,6 +32,8 @@ export interface CryptoAsset {
   balance: number
   priceUsd: number
   change24h: number
+  /** UI alias for 24h change percentage */
+  changePct?: number
   color: string
 }
 
@@ -109,6 +117,25 @@ export interface Transaction {
   date: string
   status: 'completed' | 'pending' | 'failed'
   stellarHash?: string
+  /** Human-readable counterparty or merchant name */
+  name?: string
+  /** Secondary line (memo, category detail, shortened address) */
+  detail?: string
+  category?: TransactionCategory
+  /** Fiat display currency when amount is shown in local money */
+  currency?: CurrencyCode
+}
+
+export interface TransactionsQuery {
+  type?: TransactionDirection
+  category?: TransactionCategory
+  limit?: number
+}
+
+export interface TransactionsResponse {
+  success: boolean
+  data?: Transaction[]
+  error?: string
 }
 
 export interface SwapEstimate {
@@ -168,6 +195,21 @@ export interface ISorobanService {
 
 export interface IFiatService {
   getAccountBalance(): number
+  getWallets(): Wallet[]
+  formatMoney(amount: number, currency: CurrencyCode, hidden?: boolean): string
+  convertCurrency(from: CurrencyCode, to: CurrencyCode, amount: number): number
+}
+
+export interface MergeAnalyticsPayload {
+  event: 'merge'
+  repository: string
+  branch: string
+  commit: string
+  timestamp: string
+  author: string
+  issue: number
+  status: 'success' | 'failure'
+  coverage_verified: boolean
 }
 
 // Container Interface

@@ -1,8 +1,9 @@
-import { ContactService } from '../../../../lib/services/contact.service'
-import { Contact } from '../../../../lib/types'
+import { ContactService } from '../../../lib/services/contact.service'
+import { Contact } from '../../../lib/types'
+import { TEST_STELLAR_ADDRESS } from '../../../lib/finance-data'
 
 const seed: Contact[] = [
-  { id: 'c1', name: 'Adaeze Okoro', handle: '@adaeze', initials: 'AO', address: 'GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX' },
+  { id: 'c1', name: 'Adaeze Okoro', handle: '@adaeze', initials: 'AO', address: TEST_STELLAR_ADDRESS },
   { id: 'c2', name: 'James Bello', handle: '@jbello', initials: 'JB' },
   { id: 'c3', name: 'Zara Ahmed', handle: '@zaraahmed', initials: 'ZA' },
 ]

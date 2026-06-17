@@ -5,16 +5,16 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { SendForm } from '../../../components/app/send-form'
-import { FinanceServicesProvider } from '../../../hooks/useFinanceServices'
-import { FinanceServiceContainer } from '../../../lib/services/container'
-import { Contact } from '../../../lib/types'
+import { SendForm } from '../../components/app/send-form'
+import { FinanceServicesProvider } from '../../hooks/useFinanceServices'
+import { FinanceServiceContainer } from '../../lib/services/container'
+import { Contact } from '../../lib/types'
 
-const VALID_ADDRESS = 'GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX'
+const VALID_ADDRESS = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
 
-jest.mock('../../../lib/services/contact.service', () => {
+jest.mock('../../lib/services/contact.service', () => {
   const contacts: Contact[] = [
-    { id: 'c1', name: 'Adaeze Okoro', handle: '@adaeze', initials: 'AO', address: VALID_ADDRESS },
+    { id: 'c1', name: 'Adaeze Okoro', handle: '@adaeze', initials: 'AO', address: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF' },
   ]
   return {
     ContactService: jest.fn(),

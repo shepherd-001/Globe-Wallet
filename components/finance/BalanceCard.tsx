@@ -101,14 +101,14 @@ export function BalanceCard({ title, showTotal = false, className }: BalanceCard
               {wallets.map((wallet) => (
                 <div key={wallet.code} className="flex items-center justify-between text-xs">
                   <span className="flex items-center">
-                    {wallet.symbol} {wallet.code}
-                    {wallet.changePct > 0 ? (
+                    {wallet.symbol ?? wallet.code} {wallet.code}
+                    {(wallet.changePct ?? 0) > 0 ? (
                       <TrendingUp className="w-3 h-3 text-green-500 ml-1" />
                     ) : (
                       <TrendingDown className="w-3 h-3 text-red-500 ml-1" />
                     )}
                   </span>
-                  <span>{wallet.symbol}{wallet.balance.toLocaleString()}</span>
+                  <span>{wallet.symbol ?? ''}{wallet.balance.toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -126,7 +126,7 @@ export function BalanceCard({ title, showTotal = false, className }: BalanceCard
                 <div key={asset.code} className="flex items-center justify-between text-xs">
                   <span className="flex items-center">
                     {asset.code}
-                    {asset.changePct > 0 ? (
+                    {(asset.changePct ?? asset.change24h) > 0 ? (
                       <TrendingUp className="w-3 h-3 text-green-500 ml-1" />
                     ) : (
                       <TrendingDown className="w-3 h-3 text-red-500 ml-1" />

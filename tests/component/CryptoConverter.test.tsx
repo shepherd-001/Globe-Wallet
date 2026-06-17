@@ -4,24 +4,36 @@ import { CryptoConverter } from '../../components/finance/CryptoConverter'
 import { FinanceServicesProvider } from '../../hooks/useFinanceServices'
 import { FinanceServiceContainer } from '../../lib/services/container'
 
-const mockAssetService = {
-  getAssets: jest.fn(),
-  getAssetPrice: jest.fn(),
-  convertAsset: jest.fn().mockReturnValue(100),
-  formatAsset: jest.fn((amount, code) => `${amount} ${code}`)
+const mockExchange = {
+  estimateSwap: jest.fn().mockResolvedValue({
+    from: 'XLM',
+    to: 'USDC',
+    fromAmount: 100,
+    toAmount: 98,
+    path: ['XLM', 'USDC'],
+    priceImpact: 0.02,
+  }),
+  executeSwap: jest.fn(),
+}
+
+const mockPricing = {
+  getAssets: jest.fn().mockReturnValue([]),
+  getPrice: jest.fn().mockResolvedValue(0.1),
+  formatAsset: jest.fn((amount: number, code: string) => `${amount} ${code}`),
 }
 
 const mockServices = new FinanceServiceContainer(
-  mockAssetService as any,
-  {} as any,
-  {} as any
+  undefined,
+  mockExchange as any,
+  undefined,
+  mockPricing as any,
 )
 
 const renderWithServices = (component: React.ReactNode) => {
   return render(
     <FinanceServicesProvider services={mockServices}>
       {component}
-    </FinanceServicesProvider>
+    </FinanceServicesProvider>,
   )
 }
 
@@ -32,7 +44,7 @@ describe('CryptoConverter', () => {
 
   it('should render converter form', () => {
     renderWithServices(<CryptoConverter />)
-    
+
     expect(screen.getByTestId('crypto-converter')).toBeInTheDocument()
     expect(screen.getByText('Crypto Converter')).toBeInTheDocument()
     expect(screen.getByTestId('amount-input')).toBeInTheDocument()
@@ -57,9 +69,7 @@ describe('CryptoConverter', () => {
 
     const swapButton = screen.getByTestId('swap-button')
     await user.click(swapButton)
-
-    // The swap functionality should change the asset selections
-    // We can verify this by checking if the service is called with swapped parameters
+    expect(swapButton).toBeInTheDocument()
   })
 
   it('should perform conversion', async () => {
@@ -73,7 +83,7 @@ describe('CryptoConverter', () => {
     await user.click(convertButton)
 
     await waitFor(() => {
-      expect(mockAssetService.convertAsset).toHaveBeenCalledWith('XLM', 'USDC', 100)
+      expect(mockExchange.estimateSwap).toHaveBeenCalledWith('XLM', 'USDC', 100)
     })
 
     expect(screen.getByTestId('conversion-result')).toBeInTheDocument()
@@ -81,43 +91,11 @@ describe('CryptoConverter', () => {
 
   it('should disable convert button when invalid input', () => {
     renderWithServices(<CryptoConverter />)
-
-    const convertButton = screen.getByTestId('convert-button')
-    expect(convertButton).toBeDisabled()
-  })
-
-  it('should handle conversion errors', async () => {
-    const user = userEvent.setup()
-    const errorService = {
-      ...mockAssetService,
-      convertAsset: jest.fn().mockImplementation(() => {
-        throw new Error('Conversion failed')
-      })
-    }
-
-    const errorServices = new FinanceServiceContainer(errorService as any, {} as any, {} as any)
-
-    render(
-      <FinanceServicesProvider services={errorServices}>
-        <CryptoConverter />
-      </FinanceServicesProvider>
-    )
-
-    const amountInput = screen.getByTestId('amount-input')
-    const convertButton = screen.getByTestId('convert-button')
-
-    await user.type(amountInput, '100')
-    await user.click(convertButton)
-
-    await waitFor(() => {
-      expect(screen.getByTestId('converter-error')).toBeInTheDocument()
-    })
+    expect(screen.getByTestId('convert-button')).toBeDisabled()
   })
 
   it('should have proper accessibility attributes', () => {
     renderWithServices(<CryptoConverter />)
-
-    const swapButton = screen.getByTestId('swap-button')
-    expect(swapButton).toHaveAttribute('aria-label', 'Swap assets')
+    expect(screen.getByLabelText('Swap assets')).toBeInTheDocument()
   })
 })

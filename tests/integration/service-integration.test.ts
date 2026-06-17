@@ -8,29 +8,27 @@ describe('Service Integration Tests', () => {
   })
 
   it('should integrate all services correctly', () => {
-    // Test that all services are available
-    expect(container.asset).toBeDefined()
+    expect(container.wallet).toBeDefined()
     expect(container.fiat).toBeDefined()
-    expect(container.stellar).toBeDefined()
+    expect(container.pricing).toBeDefined()
+    expect(container.exchange).toBeDefined()
   })
 
   it('should handle cross-service operations', async () => {
-    // Get asset price
-    const xlmPrice = await container.asset.getAssetPrice('XLM')
+    const xlmPrice = await container.pricing.getPrice('XLM')
     expect(xlmPrice).toBeGreaterThan(0)
 
-    // Convert to fiat equivalent
-    const usdAmount = xlmPrice * 1000 // 1000 XLM
+    const usdAmount = xlmPrice * 1000
     const ngnAmount = container.fiat.convertCurrency('USD', 'NGN', usdAmount)
-    
+
     expect(ngnAmount).toBeGreaterThan(0)
-    expect(ngnAmount).toBeGreaterThan(usdAmount) // NGN should be larger number
+    expect(ngnAmount).toBeGreaterThan(usdAmount)
   })
 
   it('should format currencies consistently', () => {
-    const xlmFormatted = container.asset.formatAsset(1234.56, 'XLM')
+    const xlmFormatted = container.pricing.formatAsset(1234.56, 'XLM')
     const usdFormatted = container.fiat.formatMoney(1234.56, 'USD')
-    
+
     expect(xlmFormatted).toContain('XLM')
     expect(usdFormatted).toContain('$')
   })

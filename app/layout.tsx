@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
+import { FinanceServicesProvider } from "@/hooks/useFinanceServices"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -46,7 +47,9 @@ export default function RootLayout({
           disableTransitionOnChange
           storageKey="tasko-theme"
         >
-          {children}
+          <FinanceServicesProvider>
+            {children}
+          </FinanceServicesProvider>
         </ThemeProvider>
         <Analytics />
       </body>

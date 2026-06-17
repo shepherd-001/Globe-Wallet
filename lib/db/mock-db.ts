@@ -57,17 +57,8 @@ class MockDB {
             created_at: new Date().toISOString()
         })
 
-        // Initial Transactions (Map legacy in/out to new send/receive)
-        this.transactions = (transactions as any[]).map(tx => ({
-            id: tx.id,
-            type: tx.type === 'in' ? 'receive' : 'send',
-            amount: tx.amount,
-            asset: tx.asset || 'XLM',
-            address: tx.address || 'GDXSPAY...',
-            date: tx.date,
-            status: tx.status || 'completed',
-            stellarHash: tx.stellarHash
-        }))
+        // Initial Transactions (preserve display metadata from seed data)
+        this.transactions = transactions.map((tx) => ({ ...tx }))
     }
 
     // User Operations

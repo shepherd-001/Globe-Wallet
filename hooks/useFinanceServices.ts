@@ -26,6 +26,18 @@ export function usePricing() {
   }
 }
 
+export function useAssets() {
+  const { exchange, pricing } = useFinanceServices()
+  return {
+    convert: async (from: AssetCode, to: AssetCode, amount: number) => {
+      const estimate = await exchange.estimateSwap(from, to, amount)
+      return estimate.toAmount
+    },
+    format: (amount: number, code: AssetCode, hidden?: boolean) =>
+      pricing.formatAsset(amount, code, hidden),
+  }
+}
+
 export function useWallet() {
   const { wallet } = useFinanceServices()
   return {
@@ -60,5 +72,17 @@ export function useSoroban() {
   return {
     createGoal: (amt: number, asset: AssetCode, deadline: number) => soroban.createSavingsGoal(amt, asset, deadline),
     stake: (amt: number, asset: AssetCode) => soroban.stakeAssets(amt, asset)
+  }
+}
+
+export function useWallets() {
+  const { fiat } = useFinanceServices()
+  return {
+    getWallets: () => fiat.getWallets(),
+    formatMoney: (amount: number, currency: CurrencyCode, hidden?: boolean) =>
+      fiat.formatMoney(amount, currency, hidden),
+    convertCurrency: (from: CurrencyCode, to: CurrencyCode, amount: number) =>
+      fiat.convertCurrency(from, to, amount),
+    getAccountBalance: () => fiat.getAccountBalance(),
   }
 }

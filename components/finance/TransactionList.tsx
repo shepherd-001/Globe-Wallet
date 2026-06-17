@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Button } from '../ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { useTransactions } from '../../hooks/useTransactions'
-import { Transaction } from '../../lib/types'
+import { Transaction, TransactionCategory, TransactionDirection } from '../../lib/types'
+import {
+  getTransactionDirection,
+  getTransactionDisplayName,
+  getTransactionDetail,
+  getTransactionCategory,
+} from '../../lib/transaction-utils'
 import { ArrowUpRight, ArrowDownLeft, Filter } from 'lucide-react'
 import { Skeleton } from '../ui/skeleton'
 
@@ -16,16 +22,16 @@ interface TransactionListProps {
 }
 
 export function TransactionList({ limit = 10, showFilters = true, className }: TransactionListProps) {
-  const { 
-    getTransactions, 
-    formatTransactionAmount, 
-    loading, 
-    hasError, 
-    error 
+  const {
+    getTransactions,
+    formatTransactionAmount,
+    loading,
+    hasError,
+    error,
   } = useTransactions()
-  
+
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [filter, setFilter] = useState<{ type?: 'in' | 'out'; category?: string }>({})
+  const [filter, setFilter] = useState<{ type?: TransactionDirection; category?: TransactionCategory }>({})
 
   useEffect(() => {
     const loadTransactions = async () => {
@@ -39,10 +45,10 @@ export function TransactionList({ limit = 10, showFilters = true, className }: T
     loadTransactions()
   }, [getTransactions, filter, limit])
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilter(prev => ({
+  const handleFilterChange = (key: 'type' | 'category', value: string) => {
+    setFilter((prev) => ({
       ...prev,
-      [key]: value === 'all' ? undefined : value
+      [key]: value === 'all' ? undefined : (value as TransactionDirection & TransactionCategory),
     }))
   }
 
@@ -89,9 +95,9 @@ export function TransactionList({ limit = 10, showFilters = true, className }: T
         <CardTitle>Recent Transactions</CardTitle>
         {showFilters && (
           <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
+            <Filter className="w-4 h-4 text-muted-foreground" aria-hidden />
             <Select onValueChange={(value) => handleFilterChange('type', value)}>
-              <SelectTrigger className="w-24 h-8">
+              <SelectTrigger className="w-24 h-8" aria-label="Filter by transaction type">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
@@ -101,7 +107,7 @@ export function TransactionList({ limit = 10, showFilters = true, className }: T
               </SelectContent>
             </Select>
             <Select onValueChange={(value) => handleFilterChange('category', value)}>
-              <SelectTrigger className="w-28 h-8">
+              <SelectTrigger className="w-28 h-8" aria-label="Filter by category">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -122,44 +128,51 @@ export function TransactionList({ limit = 10, showFilters = true, className }: T
               No transactions found
             </p>
           ) : (
-            transactions.map((transaction) => (
-              <div 
-                key={transaction.id} 
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"
-                data-testid={`transaction-${transaction.id}`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-full ${
-                    transaction.type === 'in' 
-                      ? 'bg-green-100 text-green-600' 
-                      : 'bg-red-100 text-red-600'
-                  }`}>
-                    {transaction.type === 'in' ? (
-                      <ArrowDownLeft className="w-4 h-4" />
-                    ) : (
-                      <ArrowUpRight className="w-4 h-4" />
-                    )}
+            transactions.map((transaction) => {
+              const direction = getTransactionDirection(transaction)
+              const name = getTransactionDisplayName(transaction)
+              const detail = getTransactionDetail(transaction)
+              const category = getTransactionCategory(transaction)
+
+              return (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"
+                  data-testid={`transaction-${transaction.id}`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-full ${
+                      direction === 'in'
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-red-100 text-red-600'
+                    }`}>
+                      {direction === 'in' ? (
+                        <ArrowDownLeft className="w-4 h-4" />
+                      ) : (
+                        <ArrowUpRight className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">{name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {detail} • {transaction.date}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-medium text-sm">{transaction.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {transaction.detail} • {transaction.date}
+                  <div className={`text-right ${
+                    direction === 'in' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    <div className="font-medium text-sm">
+                      {direction === 'in' ? '+' : '-'}
+                      {formatTransactionAmount(transaction)}
+                    </div>
+                    <div className="text-xs text-muted-foreground capitalize">
+                      {category}
                     </div>
                   </div>
                 </div>
-                <div className={`text-right ${
-                  transaction.type === 'in' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  <div className="font-medium text-sm">
-                    {transaction.type === 'in' ? '+' : '-'}
-                    {formatTransactionAmount(transaction)}
-                  </div>
-                  <div className="text-xs text-muted-foreground capitalize">
-                    {transaction.category}
-                  </div>
-                </div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
         {transactions.length > 0 && transactions.length === limit && (

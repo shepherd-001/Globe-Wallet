@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const VALID_ADDRESS = 'GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX'
+const VALID_ADDRESS = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
 
 test.describe('Send Flow — E2E (#23)', () => {
   test.beforeEach(async ({ page }) => {

@@ -1,19 +1,28 @@
 import { useState, useCallback } from 'react'
 import { useFinanceServices } from './useFinanceServices'
 import { useErrorBoundary } from './useErrorBoundary'
-import { Transaction, CurrencyCode, AssetCode } from '../lib/types'
-import { transactions } from '../lib/finance-data'
+import {
+  Transaction,
+  CurrencyCode,
+  TransactionCategory,
+  TransactionDirection,
+} from '../lib/types'
+import {
+  getTransactionCurrency,
+  matchesCategoryFilter,
+  matchesDirectionFilter,
+} from '../lib/transaction-utils'
 
 interface TransactionFilters {
-  type?: 'in' | 'out'
-  category?: Transaction['category']
+  type?: TransactionDirection
+  category?: TransactionCategory
   currency?: CurrencyCode
   dateRange?: { start: Date; end: Date }
 }
 
 export function useTransactions() {
   const { fiat, wallet } = useFinanceServices()
-  const { withErrorBoundary, hasError, error } = useErrorBoundary()
+  const { hasError, error } = useErrorBoundary()
 
   const [loading, setLoading] = useState(false)
 
@@ -23,16 +32,14 @@ export function useTransactions() {
     try {
       let filtered = await wallet.getTransactionHistory()
 
-      if (filters) {
-        if (filters.type) {
-          filtered = filtered.filter(t => t.type === filters.type)
-        }
-        if (filters.category) {
-          filtered = filtered.filter(t => t.category === filters.category)
-        }
-        if (filters.currency) {
-          filtered = filtered.filter(t => t.currency === filters.currency)
-        }
+      if (filters?.type) {
+        filtered = filtered.filter((t) => matchesDirectionFilter(t, filters.type))
+      }
+      if (filters?.category) {
+        filtered = filtered.filter((t) => matchesCategoryFilter(t, filters.category))
+      }
+      if (filters?.currency) {
+        filtered = filtered.filter((t) => getTransactionCurrency(t) === filters.currency)
       }
 
       setLoading(false)
@@ -44,39 +51,44 @@ export function useTransactions() {
   }, [wallet])
 
   const formatTransactionAmount = useCallback((transaction: Transaction): string => {
-    return withErrorBoundary(
-      () => fiat.formatMoney(transaction.amount, transaction.currency),
-      `${transaction.amount} ${transaction.currency}`
-    )
-  }, [fiat, withErrorBoundary])
+    const currency = getTransactionCurrency(transaction)
+    try {
+      return fiat.formatMoney(transaction.amount, currency)
+    } catch {
+      return `${transaction.amount} ${currency}`
+    }
+  }, [fiat])
 
   const convertTransactionAmount = useCallback((
     transaction: Transaction,
-    targetCurrency: CurrencyCode
+    targetCurrency: CurrencyCode,
   ): number => {
-    return withErrorBoundary(
-      () => fiat.convertCurrency(transaction.currency, targetCurrency, transaction.amount),
-      0
-    )
-  }, [fiat, withErrorBoundary])
+    const sourceCurrency = getTransactionCurrency(transaction)
+    try {
+      return fiat.convertCurrency(sourceCurrency, targetCurrency, transaction.amount)
+    } catch {
+      return 0
+    }
+  }, [fiat])
 
-  const getTransactionsByCategory = useCallback(async (category: Transaction['category']) => {
+  const getTransactionsByCategory = useCallback(async (category: TransactionCategory) => {
     return getTransactions({ category })
   }, [getTransactions])
 
-  const getTransactionsByType = useCallback(async (type: 'in' | 'out') => {
+  const getTransactionsByType = useCallback(async (type: TransactionDirection) => {
     return getTransactions({ type })
   }, [getTransactions])
 
   const calculateCategoryTotal = useCallback(async (
-    category: Transaction['category'],
-    targetCurrency: CurrencyCode = 'USD'
+    category: TransactionCategory,
+    targetCurrency: CurrencyCode = 'USD',
   ): Promise<number> => {
     const categoryTransactions = await getTransactionsByCategory(category)
 
     return categoryTransactions.reduce((total: number, transaction: Transaction) => {
       const converted = convertTransactionAmount(transaction, targetCurrency)
-      return total + (transaction.type === 'out' ? -converted : converted)
+      const direction = transaction.type === 'receive' ? 'in' : 'out'
+      return total + (direction === 'out' ? -converted : converted)
     }, 0)
   }, [getTransactionsByCategory, convertTransactionAmount])
 
@@ -89,6 +101,6 @@ export function useTransactions() {
     convertTransactionAmount,
     getTransactionsByCategory,
     getTransactionsByType,
-    calculateCategoryTotal
+    calculateCategoryTotal,
   }
 }
