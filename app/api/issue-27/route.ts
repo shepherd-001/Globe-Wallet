@@ -17,9 +17,3 @@ export async function GET() {
         timestamp: new Date().toISOString()
     })
 }
-
-/**
- * Mock transaction verification endpoint for integration tests
- */
-    })
-}

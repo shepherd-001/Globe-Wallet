@@ -1,3 +1,5 @@
+'use client'
+
 import { useContext, createContext, ReactNode, createElement } from 'react'
 import { IFinanceServiceContainer, AssetCode, CurrencyCode } from '../lib/types'
 import { financeServices } from '../lib/services/container'

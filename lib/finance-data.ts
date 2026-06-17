@@ -11,6 +11,39 @@ export const wallets: Wallet[] = [
   { id: 'w3', code: "GBP", name: "British Pound", label: "Pound", balance: 1290.0, color: "bg-indigo-500", symbol: "£", changePct: -0.6 },
 ]
 
+export const savingsGoals: SavingsGoal[] = [
+  { id: 'sg1', title: 'Emergency fund', saved: 320000, target: 500000, currency: 'NGN', apy: 8.5, color: 'bg-primary' },
+  { id: 'sg2', title: 'Travel', saved: 1500, target: 3000, currency: 'USD', apy: 6.0, color: 'bg-accent' },
+  { id: 'sg3', title: 'New laptop', saved: 540, target: 1200, currency: 'USD', apy: 5.5, color: 'bg-indigo-500' },
+]
+
+export const cards: PaymentCard[] = [
+  {
+    id: 'c1',
+    label: 'Globe Virtual',
+    type: 'virtual',
+    brand: 'Visa',
+    last4: '4291',
+    expiry: '09/28',
+    balance: 8420,
+    currency: 'USD',
+    frozen: false,
+    gradient: 'from-indigo-600 to-violet-700',
+  },
+  {
+    id: 'c2',
+    label: 'Globe Physical',
+    type: 'physical',
+    brand: 'Mastercard',
+    last4: '8834',
+    expiry: '03/27',
+    balance: 215000,
+    currency: 'NGN',
+    frozen: false,
+    gradient: 'from-emerald-600 to-teal-700',
+  },
+]
+
 export const transactions: Transaction[] = [
   {
     id: "t1",
