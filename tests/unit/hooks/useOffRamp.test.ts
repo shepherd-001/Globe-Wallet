@@ -106,15 +106,16 @@ describe('useOffRamp', () => {
   it('computes validation and breakdown for valid input', () => {
     const { result } = renderHook(() => useOffRamp({ methods: METHODS }))
 
+    // 110 XLM * 0.095 USD/XLM = $10.45, above bank_1 min ($10)
     act(() => {
-      result.current.setAmount('100')
+      result.current.setAmount('110')
       result.current.setAsset('XLM')
       result.current.setPaymentMethod('bank_1')
     })
 
     expect(result.current.validation.valid).toBe(true)
     expect(result.current.breakdown).not.toBeNull()
-    expect(result.current.breakdown?.usdValue).toBeGreaterThan(0)
+    expect(result.current.breakdown?.usdValue).toBeGreaterThan(10)
   })
 
   it('does not submit when validation fails', async () => {
@@ -137,8 +138,8 @@ describe('useOffRamp', () => {
             methodId: 'bank_1',
             methodName: 'Chase Checking ****1234',
             asset: 'XLM',
-            amount: 100,
-            fiatAmount: 11.85,
+            amount: 110,
+            fiatAmount: 10.45,
             status: 'completed',
             hash: '0xabc',
           },
@@ -148,7 +149,7 @@ describe('useOffRamp', () => {
     const { result } = renderHook(() => useOffRamp({ methods: METHODS }))
 
     act(() => {
-      result.current.setAmount('100')
+      result.current.setAmount('110')
       result.current.setPaymentMethod('bank_1')
     })
 
@@ -175,7 +176,7 @@ describe('useOffRamp', () => {
     const { result } = renderHook(() => useOffRamp({ methods: METHODS }))
 
     act(() => {
-      result.current.setAmount('100')
+      result.current.setAmount('110')
       result.current.setPaymentMethod('bank_1')
     })
 
@@ -193,7 +194,7 @@ describe('useOffRamp', () => {
     const { result } = renderHook(() => useOffRamp({ methods: METHODS }))
 
     act(() => {
-      result.current.setAmount('100')
+      result.current.setAmount('110')
       result.current.setPaymentMethod('bank_1')
     })
 
@@ -213,7 +214,7 @@ describe('useOffRamp', () => {
     const { result } = renderHook(() => useOffRamp({ methods: METHODS }))
 
     act(() => {
-      result.current.setAmount('100')
+      result.current.setAmount('110')
       result.current.setPaymentMethod('bank_1')
     })
 
