@@ -81,7 +81,7 @@ describe('BalanceCard (Legacy Finance)', () => {
   })
 
   it('should handle refresh button click', async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup({ delay: null })
     renderWithServices(<BalanceCard title="Test Balance" />)
 
     await waitFor(() => {

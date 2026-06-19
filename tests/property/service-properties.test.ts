@@ -2,13 +2,15 @@ import fc from 'fast-check'
 import { WalletService } from '../../lib/services/wallet.service'
 import { PricingService } from '../../lib/services/pricing.service'
 import { FiatService } from '../../lib/services/fiat.service'
-import { StellarService } from '../../lib/services/stellar.service'
+import { AssetService } from '../../lib/services/asset.service'
 import { AssetCode, CurrencyCode } from '../../lib/types'
+import { TEST_STELLAR_ADDRESS } from '../../lib/fixtures'
 
 describe('Service Interface Compliance Properties', () => {
   const walletService = new WalletService()
   const pricingService = new PricingService()
   const fiatService = new FiatService()
+  const assetService = new AssetService()
 
   it('Property 1: PricingService should handle all operations correctly', () => {
     fc.assert(fc.property(

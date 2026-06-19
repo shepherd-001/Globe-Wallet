@@ -1,5 +1,5 @@
 import { WalletService } from '../../../lib/services/wallet.service'
-import { StellarServiceError } from '../../../lib/types'
+import { StellarServiceError, WalletServiceError } from '../../../lib/types'
 import { TEST_STELLAR_ADDRESS } from '../../../lib/fixtures'
 
 describe('WalletService', () => {
@@ -40,6 +40,22 @@ describe('WalletService', () => {
         it('should reject invalid addresses', () => {
             expect(service.validateAddress('invalid')).toBe(false)
             expect(service.validateAddress('')).toBe(false)
+            expect(service.validateAddress('B' + 'A'.repeat(55))).toBe(false)
+            expect(service.validateAddress('G' + 'A'.repeat(54))).toBe(false)
+            expect(service.validateAddress('G' + '!'.repeat(55))).toBe(false)
+        })
+    })
+
+    describe('generateReceiveAddress', () => {
+        it('should return the mock stellar public key', () => {
+            expect(service.generateReceiveAddress()).toBe(TEST_STELLAR_ADDRESS)
+        })
+    })
+
+    describe('getTransactionHistory', () => {
+        it('should return persisted transactions', async () => {
+            const history = await service.getTransactionHistory()
+            expect(Array.isArray(history)).toBe(true)
         })
     })
 
@@ -64,6 +80,31 @@ describe('WalletService', () => {
         it('should throw error for invalid destination', async () => {
             await expect(service.sendPayment('invalid', 10, 'XLM'))
                 .rejects.toThrow(StellarServiceError)
+        })
+
+        it('should throw error for non-positive amount', async () => {
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 0, 'XLM'))
+                .rejects.toThrow(WalletServiceError)
+        })
+
+        it('should throw error when payment verification fails', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: false,
+                json: () => Promise.resolve({ error: 'Verification failed' }),
+            })
+
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 10, 'XLM'))
+                .rejects.toThrow(StellarServiceError)
+        })
+
+        it('should throw a default error when verification response is not JSON', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: false,
+                json: () => Promise.reject(new Error('invalid json')),
+            })
+
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 10, 'XLM'))
+                .rejects.toThrow('Payment verification failed')
         })
     })
 })

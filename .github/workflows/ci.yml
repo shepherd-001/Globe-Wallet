@@ -35,6 +35,9 @@ jobs:
     - name: Run integration tests
       run: npm run test:integration
 
+    - name: Run accessibility component tests (Issue #24)
+      run: npm run test:a11y
+
     - name: Run coverage
       run: npm run test:coverage
 
@@ -42,7 +45,7 @@ jobs:
       run: npx playwright install --with-deps
 
     - name: Run E2E tests (issue #30 dashboard)
-      run: npm run test:e2e -- --grep "Issue #30"
+      run: 'npm run test:e2e -- --grep "Issue #30"'
 
     - name: Run E2E tests (send flow)
       run: npm run test:e2e -- --grep "Send Flow"
@@ -51,10 +54,13 @@ jobs:
       run: npm run test:e2e -- --grep "@critical"
 
     - name: Run E2E tests (issue #14 mock centralization)
-      run: npm run test:e2e -- --grep "Issue #14"
+      run: 'npm run test:e2e -- --grep "Issue #14"'
 
     - name: Run E2E tests (issue #21 payout validation)
-      run: npm run test:e2e -- --grep "Issue #21"
+      run: 'npm run test:e2e -- --grep "Issue #21"'
+
+    - name: Run E2E accessibility tests (Issue #24)
+      run: npm run test:a11y:e2e
 
     - name: Run full E2E suite
       run: npm run test:e2e
@@ -85,9 +91,10 @@ jobs:
             "commit": "${{ github.sha }}",
             "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",
             "author": "${{ github.actor }}",
-            "issue": 14,
-            "issues": [14, 21, 23, 25, 28, 30],
+            "issue": 24,
+            "issues": [14, 21, 23, 24, 25, 28, 30],
             "status": "success",
             "coverage_verified": true,
-            "fixture_coverage_verified": true
+            "fixture_coverage_verified": true,
+            "accessibility_verified": true
           }'

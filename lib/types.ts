@@ -443,3 +443,57 @@ export interface IFinanceServiceContainer {
   asset: IAssetService;
   stellar: IStellarService;
 }
+
+// ── Accessibility Audit (Issue #24) ─────────────────────────────────────────
+
+export type A11yImpactLevel = "critical" | "serious" | "moderate" | "minor" | "unknown";
+
+export type A11yWcagStandard = "WCAG2A" | "WCAG2AA" | "WCAG2AAA";
+
+export interface A11yPageConfig {
+  path: string;
+  label: string;
+  critical: boolean;
+}
+
+export interface A11yViolationNode {
+  html: string;
+  target: string;
+}
+
+export interface A11yViolation {
+  id: string;
+  impact: A11yImpactLevel;
+  description: string;
+  help: string;
+  helpUrl: string;
+  nodes: A11yViolationNode[];
+}
+
+export interface A11yAuditSummary {
+  pagePath: string;
+  violationCount: number;
+  byImpact: Record<A11yImpactLevel, number>;
+  passed: boolean;
+  scannedAt: string;
+}
+
+export interface A11yAuditRequest {
+  path: string;
+  minImpact?: A11yImpactLevel;
+}
+
+export interface A11yAuditResponse {
+  success: boolean;
+  path: string;
+  standard: A11yWcagStandard;
+  summary: A11yAuditSummary;
+  violations: A11yViolation[];
+  error?: string;
+}
+
+export interface IA11yService {
+  getPages(): A11yPageConfig[];
+  getStandard(): A11yWcagStandard;
+  auditPage(request: A11yAuditRequest): A11yAuditResponse;
+}

@@ -65,7 +65,11 @@ describe('SendFlow Integration — success path', () => {
 
     fireEvent.change(screen.getByTestId('address-input'), { target: { value: VALID_ADDRESS } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '5' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    fireEvent.click(screen.getByTestId('review-button'))
+    await waitFor(() => {
+      expect(screen.getByTestId('confirm-send-button')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByTestId('confirm-send-button'))
 
     await waitFor(() =>
       expect(wallet.sendPayment).toHaveBeenCalledWith(VALID_ADDRESS, 5, 'XLM', undefined)
@@ -80,7 +84,7 @@ describe('SendFlow Integration — validation failure', () => {
 
     fireEvent.change(screen.getByTestId('address-input'), { target: { value: 'bad-addr' } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '10' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    fireEvent.click(screen.getByTestId('review-button'))
 
     await waitFor(() => {
       expect(screen.getByTestId('send-error')).toBeInTheDocument()

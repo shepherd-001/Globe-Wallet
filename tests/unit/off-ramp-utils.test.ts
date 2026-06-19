@@ -287,7 +287,7 @@ describe("buildPayoutBreakdown", () => {
 
 describe("validateWithdrawal", () => {
   const baseInput = {
-    amount: "100",
+    amount: "110",
     asset: "XLM",
     paymentMethodId: "bank_1",
     balances: DEFAULT_BALANCES,
@@ -303,7 +303,7 @@ describe("validateWithdrawal", () => {
     });
 
     it("accepts numeric amount", () => {
-      expect(validateWithdrawal({ ...baseInput, amount: 100 }).valid).toBe(true);
+      expect(validateWithdrawal({ ...baseInput, amount: 110 }).valid).toBe(true);
     });
 
     it("accepts USDC asset", () => {

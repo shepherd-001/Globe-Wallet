@@ -1,4 +1,7 @@
 import '@testing-library/jest-dom'
+import { toHaveNoViolations } from 'jest-axe'
+
+expect.extend(toHaveNoViolations)
 
 const nodeRequest = global.Request || globalThis.Request
 const nodeResponse = global.Response || globalThis.Response

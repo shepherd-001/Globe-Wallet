@@ -48,7 +48,7 @@ test.describe('Send page — failure path', () => {
       const amountInput = page.getByTestId('amount-input')
       await amountInput.fill('10')
 
-      const submitBtn = page.getByTestId('send-submit-btn')
+      const submitBtn = page.getByTestId('review-button')
       await submitBtn.click()
 
       // Expect an error message to appear

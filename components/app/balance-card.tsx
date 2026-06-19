@@ -70,7 +70,7 @@ export function BalanceCard() {
                     onClick={() => setActive(w.code)}
                     className={cn(
                       "rounded-full px-3 py-1 text-xs font-semibold transition-all",
-                      active === w.code ? "bg-primary-foreground text-primary" : "text-primary-foreground/80",
+                      active === w.code ? "bg-primary-foreground text-primary" : "text-primary-foreground",
                     )}
                     data-testid={`balance-switch-${w.code}`}
                   >

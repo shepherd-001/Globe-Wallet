@@ -2,10 +2,8 @@ import fc from 'fast-check'
 import { WalletService } from '../../lib/services/wallet.service'
 import { PricingService } from '../../lib/services/pricing.service'
 import { FiatService } from '../../lib/services/fiat.service'
-import { StellarService } from '../../lib/services/stellar.service'
 import { AssetCode, CurrencyCode } from '../../lib/types'
 import { FinanceServiceContainer } from '../../lib/services/container'
-import { TEST_STELLAR_ADDRESS } from '../../lib/fixtures'
 
 describe('Type System Correctness Properties', () => {
   const walletService = new WalletService()
@@ -33,13 +31,9 @@ describe('Type System Correctness Properties', () => {
         expect(typeof account.publicKey).toBe('string')
         expect(typeof account.isFunded).toBe('boolean')
 
-        const assetFormatted = pricingService.formatAsset(amount, assetCode as any)
-        const fiatFormatted = fiatService.formatMoney(amount, currencyCode as any)
-
-        // Test formatted outputs are strings
-        const assetFormatted = assetService.formatAsset(amount, assetCode as AssetCode)
+        const assetFormatted = pricingService.formatAsset(amount, assetCode as AssetCode)
         const fiatFormatted = fiatService.formatMoney(amount, currencyCode as CurrencyCode)
-        
+
         expect(typeof assetFormatted).toBe('string')
         expect(typeof fiatFormatted).toBe('string')
       }
@@ -74,11 +68,11 @@ describe('Type System Correctness Properties', () => {
     fc.assert(fc.property(
       fc.constantFrom('XLM', 'USDC', 'USDT'),
       fc.constantFrom('NGN', 'USD', 'GBP'), 
-      fc.float({ min: 0.01, max: 1000, noNaN: true }),
+      fc.double({ min: 0.01, max: 1000, noNaN: true }),
       (fromAsset, toCurrency, amount) => {
         // Asset conversions should return valid numbers
-        if (fromAsset !== 'XLM') { // Avoid same-asset conversion
-          const converted = assetService.convertAsset(fromAsset as AssetCode, 'XLM', amount)
+        if (fromAsset !== 'XLM') {
+          const converted = container.asset.convertAsset(fromAsset as AssetCode, 'XLM', amount)
           expect(typeof converted).toBe('number')
           expect(converted).toBeGreaterThan(0)
           expect(Number.isFinite(converted)).toBe(true)

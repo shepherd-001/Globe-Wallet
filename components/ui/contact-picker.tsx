@@ -61,6 +61,8 @@ export function ContactPicker({
         data-testid="contact-search"
         value={query}
         onChange={e => onQueryChange(e.target.value)}
+        onInput={e => onQueryChange(e.currentTarget.value)}
+        autoComplete="off"
         className="bg-background/50"
       />
       {query.length > 0 && (

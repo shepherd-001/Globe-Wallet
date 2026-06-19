@@ -1,7 +1,7 @@
 import fc from 'fast-check'
 import { AssetService } from '../../lib/services/asset.service'
 import { FiatService } from '../../lib/services/fiat.service'
-import { StellarServiceError } from '../../lib/types'
+import { FiatServiceError } from '../../lib/types'
 
 describe('Error Handling Properties', () => {
   const assetService = new AssetService()
@@ -20,7 +20,7 @@ describe('Error Handling Properties', () => {
       (invalidCurrency, amount) => {
         expect(() => {
           fiatService.convertCurrency(invalidCurrency as any, 'USD', amount)
-        }).toThrow(StellarServiceError)
+        }).toThrow(FiatServiceError)
       }
     ), { numRuns: 100 })
   })

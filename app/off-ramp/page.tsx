@@ -248,10 +248,12 @@ export default function OffRampPage() {
   return (
     <AppShell>
       <div className="flex items-center gap-4 p-4 pb-2">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+        <Link
+          href="/"
+          aria-label="Go back to home"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Link>
         <h1 className="text-lg font-semibold">Cash Out</h1>
       </div>
@@ -286,7 +288,7 @@ export default function OffRampPage() {
                       />
                     </div>
                     <Select value={currency} onValueChange={setCurrency}>
-                      <SelectTrigger className="w-24">
+                      <SelectTrigger className="w-24" aria-label="Withdrawal currency">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

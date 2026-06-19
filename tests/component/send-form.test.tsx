@@ -1,12 +1,18 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { SendForm } from '../../components/app/send-form'
 import { FinanceServicesProvider } from '../../hooks/useFinanceServices'
 import { FinanceServiceContainer } from '../../lib/services/container'
-import type { IWalletService, IPricingService, IFiatService } from '../../lib/types'
 import React from 'react'
 
 const VALID_ADDRESS = 'GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX'
+
+async function submitSendForm() {
+  fireEvent.click(screen.getByTestId('review-button'))
+  await waitFor(() => {
+    expect(screen.getByTestId('confirm-send-button')).toBeInTheDocument()
+  })
+  fireEvent.click(screen.getByTestId('confirm-send-button'))
+}
 
 describe('SendForm Component (Issue #14)', () => {
   let mockWallet: any
@@ -65,15 +71,16 @@ describe('SendForm Component (Issue #14)', () => {
     expect(screen.getByTestId('address-input')).toBeInTheDocument()
     expect(screen.getByTestId('amount-input')).toBeInTheDocument()
     expect(screen.getByTestId('memo-input')).toBeInTheDocument()
-    expect(screen.getByTestId('send-submit-btn')).toBeInTheDocument()
+    expect(screen.getByTestId('review-button')).toBeInTheDocument()
   })
 
   it('should show validation error for invalid stellar address', async () => {
+    mockWallet.validateAddress.mockReturnValue(false)
     renderSendForm()
 
     fireEvent.change(screen.getByTestId('address-input'), { target: { value: 'invalid' } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '100' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    fireEvent.click(screen.getByTestId('review-button'))
 
     await waitFor(() => {
       expect(screen.getByTestId('send-error')).toBeInTheDocument()
@@ -86,7 +93,7 @@ describe('SendForm Component (Issue #14)', () => {
 
     fireEvent.change(screen.getByTestId('address-input'), { target: { value: VALID_ADDRESS } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '-50' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    fireEvent.click(screen.getByTestId('review-button'))
 
     await waitFor(() => {
       expect(screen.getByTestId('send-error')).toBeInTheDocument()
@@ -99,7 +106,7 @@ describe('SendForm Component (Issue #14)', () => {
     fireEvent.change(screen.getByTestId('address-input'), { target: { value: VALID_ADDRESS } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '100' } })
     fireEvent.change(screen.getByTestId('memo-input'), { target: { value: 'Test memo' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    await submitSendForm()
 
     await waitFor(() => {
       expect(mockWallet.sendPayment).toHaveBeenCalledWith(VALID_ADDRESS, 100, 'XLM', 'Test memo')
@@ -111,7 +118,7 @@ describe('SendForm Component (Issue #14)', () => {
 
     fireEvent.change(screen.getByTestId('address-input'), { target: { value: VALID_ADDRESS } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '100' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    await submitSendForm()
 
     await waitFor(() => {
       expect(screen.getByTestId('send-success')).toBeInTheDocument()
@@ -124,7 +131,7 @@ describe('SendForm Component (Issue #14)', () => {
     const addressInput = screen.getByTestId('address-input')
     fireEvent.change(addressInput, { target: { value: VALID_ADDRESS } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '100' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    await submitSendForm()
 
     await waitFor(() => {
       expect(screen.getByTestId('send-success')).toBeInTheDocument()
@@ -132,7 +139,7 @@ describe('SendForm Component (Issue #14)', () => {
 
     fireEvent.click(screen.getByTestId('send-again-btn'))
 
-    expect(addressInput).toHaveValue('')
+    expect(screen.getByTestId('address-input')).toHaveValue('')
   })
 
   it('should show error when sendPayment fails', async () => {
@@ -142,7 +149,11 @@ describe('SendForm Component (Issue #14)', () => {
 
     fireEvent.change(screen.getByTestId('address-input'), { target: { value: VALID_ADDRESS } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '100' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    fireEvent.click(screen.getByTestId('review-button'))
+    await waitFor(() => {
+      expect(screen.getByTestId('confirm-send-button')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByTestId('confirm-send-button'))
 
     await waitFor(() => {
       expect(screen.getByTestId('send-error')).toBeInTheDocument()
@@ -156,10 +167,14 @@ describe('SendForm Component (Issue #14)', () => {
 
     fireEvent.change(screen.getByTestId('address-input'), { target: { value: VALID_ADDRESS } })
     fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '100' } })
-    fireEvent.click(screen.getByTestId('send-submit-btn'))
+    fireEvent.click(screen.getByTestId('review-button'))
+    await waitFor(() => {
+      expect(screen.getByTestId('confirm-send-button')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByTestId('confirm-send-button'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('send-submit-btn')).toBeDisabled()
+      expect(screen.getByTestId('confirm-send-button')).toBeDisabled()
     })
   })
 
