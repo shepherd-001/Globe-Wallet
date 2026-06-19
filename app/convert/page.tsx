@@ -76,6 +76,8 @@ export default function ConvertPage() {
   useEffect(() => {
     if (fromAmount) {
       setToAmount(calculateConversion(fromAmount, true))
+    } else {
+      setToAmount("")
     }
   }, [fromAmount, fromCurrency, toCurrency])
   
@@ -90,12 +92,9 @@ export default function ConvertPage() {
   }
   
   const swapCurrencies = () => {
-    const newFromCurrency = toCurrency
-    const newToCurrency = fromCurrency
-    setFromCurrency(newFromCurrency)
-    setToCurrency(newToCurrency)
+    setFromCurrency(toCurrency)
+    setToCurrency(fromCurrency)
     setFromAmount(toAmount)
-    setToAmount(fromAmount)
   }
   
   const handleConvert = async () => {
