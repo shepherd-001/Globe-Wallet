@@ -91,10 +91,11 @@ describe('ReceiveForm — issue #22', () => {
   })
 
   it('generates payment request QR with SEP-0007 URI', async () => {
+    const user = userEvent.setup({ delay: null })
     renderReceiveForm()
-    await userEvent.click(screen.getByTestId('tab-request'))
-    await userEvent.type(screen.getByTestId('receive-amount-input'), '15')
-    await userEvent.type(screen.getByTestId('receive-memo-input'), 'Lunch')
+    await user.click(screen.getByTestId('tab-request'))
+    await user.type(screen.getByTestId('receive-amount-input'), '15')
+    await user.type(screen.getByTestId('receive-memo-input'), 'Lunch')
 
     const qr = screen.getByTestId('payment-qr')
     const value = qr.getAttribute('data-value') ?? ''
@@ -108,9 +109,10 @@ describe('ReceiveForm — issue #22', () => {
   })
 
   it('shows accessible error for invalid amount', async () => {
+    const user = userEvent.setup({ delay: null })
     renderReceiveForm()
-    await userEvent.click(screen.getByTestId('tab-request'))
-    await userEvent.type(screen.getByTestId('receive-amount-input'), '-3')
+    await user.click(screen.getByTestId('tab-request'))
+    await user.type(screen.getByTestId('receive-amount-input'), '-3')
 
     const error = screen.getByTestId('receive-amount-error')
     expect(error).toHaveAttribute('role', 'alert')
@@ -142,8 +144,9 @@ describe('ReceiveForm — issue #22', () => {
   })
 
   it('supports keyboard navigation between tabs', async () => {
+    const user = userEvent.setup({ delay: null })
     renderReceiveForm()
-    await userEvent.click(screen.getByTestId('tab-request'))
+    await user.click(screen.getByTestId('tab-request'))
     expect(screen.getByTestId('receive-request-card')).toBeInTheDocument()
   })
 })

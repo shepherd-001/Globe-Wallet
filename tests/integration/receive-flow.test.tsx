@@ -64,15 +64,16 @@ describe('Receive flow integration — issue #22', () => {
   })
 
   it('updates payment QR when amount and memo change', async () => {
+    const user = userEvent.setup({ delay: null })
     render(
       <FinanceServicesProvider services={buildContainer()}>
         <ReceiveForm />
       </FinanceServicesProvider>
     )
 
-    await userEvent.click(screen.getByTestId('tab-request'))
-    await userEvent.type(screen.getByTestId('receive-amount-input'), '20')
-    await userEvent.type(screen.getByTestId('receive-memo-input'), 'API')
+    await user.click(screen.getByTestId('tab-request'))
+    await user.type(screen.getByTestId('receive-amount-input'), '20')
+    await user.type(screen.getByTestId('receive-memo-input'), 'API')
 
     await waitFor(() => {
       const qr = screen.getByTestId('payment-qr')
@@ -83,14 +84,15 @@ describe('Receive flow integration — issue #22', () => {
   })
 
   it('disables payment actions when amount validation fails', async () => {
+    const user = userEvent.setup({ delay: null })
     render(
       <FinanceServicesProvider services={buildContainer()}>
         <ReceiveForm />
       </FinanceServicesProvider>
     )
 
-    await userEvent.click(screen.getByTestId('tab-request'))
-    await userEvent.type(screen.getByTestId('receive-amount-input'), '-1')
+    await user.click(screen.getByTestId('tab-request'))
+    await user.type(screen.getByTestId('receive-amount-input'), '-1')
 
     await waitFor(() => {
       expect(screen.getByTestId('receive-amount-error')).toBeInTheDocument()
