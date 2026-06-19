@@ -10,17 +10,11 @@ import {
   CreditCard,
   Banknote,
   type LucideIcon,
-} from "lucide-react"
-import { useTransactions } from "@/hooks/useTransactions"
-import type { Transaction } from "@/lib/types"
-import { cn } from "@/lib/utils"
-import { Skeleton } from "@/components/ui/skeleton"
 } from "lucide-react";
-import { transactions, formatMoney } from "@/lib/finance-data";
+import { useTransactions } from "@/hooks/useTransactions";
 import type { Transaction } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTransactions } from "@/hooks/useTransactions";
 
 const categoryIcon: Record<string, LucideIcon> = {
   transfer: ArrowUpRight,
@@ -39,8 +33,7 @@ interface TransactionListProps {
 }
 
 export function TransactionList({ limit }: TransactionListProps) {
-  const { getTransactions, formatTransactionAmount, loading } =
-    useTransactions();
+  const { getTransactions, loading } = useTransactions();
   const [items, setItems] = useState<Transaction[]>([]);
 
   useEffect(() => {
@@ -84,10 +77,15 @@ export function TransactionList({ limit }: TransactionListProps) {
 
   if (!loading && items.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-muted-foreground" data-testid="transaction-list-empty">
+      <p
+        className="py-8 text-center text-sm text-muted-foreground"
+        data-testid="transaction-list-empty"
+        role="status"
+        aria-live="polite"
+      >
         No transactions yet
-      </div>
-    )
+      </p>
+    );
   }
 
   return (

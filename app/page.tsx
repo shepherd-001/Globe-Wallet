@@ -31,7 +31,12 @@ export default function HomePage() {
             See all <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-1">
+        <div
+          className="flex gap-3 overflow-x-auto pb-1"
+          role="region"
+          aria-label="Savings goals"
+          tabIndex={0}
+        >
           {MOCK_SAVINGS_GOALS.map((goal) => {
             const pct = Math.round((goal.saved / goal.target) * 100)
             return (
@@ -40,7 +45,11 @@ export default function HomePage() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   {formatCurrency(goal.saved, goal.currency)} of {formatCurrency(goal.target, goal.currency)}
                 </p>
-                <Progress value={pct} className="mt-3 h-1.5" />
+                <Progress
+                  value={pct}
+                  className="mt-3 h-1.5"
+                  aria-label={`${goal.title} savings progress, ${pct}% complete`}
+                />
                 <p className="mt-2 text-xs font-medium text-primary">{pct}% saved</p>
               </Card>
             )

@@ -49,10 +49,12 @@ export default function ReceivePage() {
   return (
     <AppShell>
       <div className="flex items-center gap-4 p-4 pb-2">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+        <Link
+          href="/"
+          aria-label="Go back to home"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Link>
         <h1 className="text-lg font-semibold">Receive XLM</h1>
       </div>
@@ -69,11 +71,13 @@ export default function ReceivePage() {
               <div className="text-center space-y-4">
                 <div className="flex justify-center">
                   <div className="p-4 bg-white rounded-2xl">
-                    <QRCodeSVG 
-                      value={stellarAddress} 
+                    <QRCodeSVG
+                      value={stellarAddress}
                       size={160}
                       level="M"
                       includeMargin={false}
+                      title="QR code for Stellar receive address"
+                      aria-label="QR code for Stellar receive address"
                     />
                   </div>
                 </div>
@@ -158,11 +162,13 @@ export default function ReceivePage() {
                 <div className="text-center space-y-4">
                   <div className="flex justify-center">
                     <div className="p-4 bg-white rounded-2xl">
-                      <QRCodeSVG 
-                        value={generatePaymentQR()} 
+                      <QRCodeSVG
+                        value={generatePaymentQR()}
                         size={160}
                         level="M"
                         includeMargin={false}
+                        title="QR code for payment request"
+                        aria-label="QR code for payment request"
                       />
                     </div>
                   </div>

@@ -1,22 +1,5 @@
 "use client";
 
-import { useState, useMemo, useId } from 'react'
-import { Send, CheckCircle2, Loader2, Coins, RefreshCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { WalletErrorAlert } from '@/components/ui/wallet-error-alert'
-import { usePricing, useWallets } from '@/hooks/useFinanceServices'
-import { useBalances } from '@/hooks/useBalances'
-import { useWalletSend } from '@/hooks/useWalletSend'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { calculateFee } from '@/lib/helpers/format'
-import type { AssetCode } from '@/lib/types'
-
-export function SendForm() {
-  const { send, isProcessing, status, error, result, reset } = useWalletSend()
-  const { formatAsset } = usePricing()
-  const { assets } = useBalances()
 import { useState, useMemo, useId } from "react";
 import { Send, CheckCircle2, Loader2, Coins, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,7 +16,6 @@ import { WalletErrorAlert } from "@/components/ui/wallet-error-alert";
 import { usePricing } from "@/hooks/useFinanceServices";
 import { useBalances } from "@/hooks/useBalances";
 import { useWalletSend } from "@/hooks/useWalletSend";
-import { useContacts } from "@/hooks/useContacts";
 import {
   Select,
   SelectContent,
@@ -48,18 +30,12 @@ export function SendForm() {
   const { send, isProcessing, status, error, result, reset } = useWalletSend();
   const { formatAsset } = usePricing();
   const { assets } = useBalances();
-  const contactsState = useContacts();
 
   const [address, setAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [selectedAsset, setSelectedAsset] = useState<AssetCode>("XLM");
   const [memo, setMemo] = useState("");
 
-  const addressId = useId()
-  const addressErrorId = useId()
-  const amountId = useId()
-  const memoId = useId()
-  // Unique IDs for aria associations
   const addressId = useId();
   const addressErrorId = useId();
   const amountId = useId();
@@ -81,10 +57,6 @@ export function SendForm() {
     status === "error" && error?.toLowerCase().includes("amount");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await send(address, amount, selectedAsset, memo || undefined)
-  }
-  const handleReview = async (e: React.FormEvent) => {
     e.preventDefault();
     await send(address, amount, selectedAsset, memo || undefined);
   };
@@ -111,7 +83,7 @@ export function SendForm() {
         </CardDescription>
       </CardHeader>
 
-      <form onSubmit={handleReview} aria-label="Send payment form" noValidate>
+      <form onSubmit={handleSubmit} aria-label="Send payment form" noValidate>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <label htmlFor={addressId} className="text-sm font-medium">
@@ -200,12 +172,9 @@ export function SendForm() {
           <div className="space-y-2">
             <label
               htmlFor={memoId}
-              className="text-sm font-medium text-muted-foreground flex items-center justify-between"
+              className="text-sm font-medium text-muted-foreground"
             >
-              Memo{" "}
-              <span className="text-[10px] uppercase font-bold opacity-50 px-1.5 py-0.5 bg-muted rounded">
-                Optional
-              </span>
+              Memo (optional)
             </label>
             <Input
               id={memoId}
@@ -217,8 +186,6 @@ export function SendForm() {
             />
           </div>
 
-          {status === 'error' && error && (
-          {/* Error state */}
           {status === "error" && error && (
             <WalletErrorAlert
               id={addressErrorId}
@@ -228,8 +195,6 @@ export function SendForm() {
             />
           )}
 
-          {status === 'success' && result && (
-          {/* Success state */}
           {status === "success" && result && (
             <div
               role="status"
