@@ -93,6 +93,8 @@ export function TransactionList({ limit }: TransactionListProps) {
       className="divide-y divide-border"
       role="list"
       data-testid="transaction-list"
+      data-transaction-count={items.length}
+      aria-label={`${items.length} transaction${items.length === 1 ? "" : "s"}`}
     >
       {items.map((tx) => {
         const isIncoming =
