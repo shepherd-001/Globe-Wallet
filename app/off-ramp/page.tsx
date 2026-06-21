@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { computeFeeAmount } from "@/lib/off-ramp-utils";
 
 interface PaymentMethod {
   id: string;
@@ -120,13 +121,7 @@ export default function OffRampPage() {
     if (!method || !amount) return 0;
 
     const usdAmount = getUSDValue();
-    if (method.fees.includes("%")) {
-      const percent = parseFloat(method.fees.replace("%", "")) / 100;
-      return usdAmount * percent;
-    } else {
-      const fixedFee = parseFloat(method.fees.replace("$", "").split(" ")[0]);
-      return fixedFee;
-    }
+    return computeFeeAmount(usdAmount, method.fees).feeAmount;
   };
 
   const getNetAmount = () => {

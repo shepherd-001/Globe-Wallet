@@ -105,6 +105,7 @@ const customJestConfig = {
       functions: 100,
       lines: 95,
       statements: 95,
+    },
     'hooks/useOffRamp.ts': {
       branches: 80,
       functions: 85,
