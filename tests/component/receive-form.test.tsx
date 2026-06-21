@@ -9,6 +9,7 @@ import { ReceiveForm } from '../../components/app/receive-form'
 import { FinanceServicesProvider } from '../../hooks/useFinanceServices'
 import { FinanceServiceContainer } from '../../lib/services/container'
 import { TEST_STELLAR_ADDRESS } from '../../lib/finance-data'
+import { toast } from 'sonner'
 
 jest.mock('qrcode.react', () => ({
   QRCodeSVG: ({ value }: { value: string }) => (
@@ -148,5 +149,83 @@ describe('ReceiveForm — issue #22', () => {
     renderReceiveForm()
     await user.click(screen.getByTestId('tab-request'))
     expect(screen.getByTestId('receive-request-card')).toBeInTheDocument()
+  })
+
+  describe('clipboard/share error handling — issue #9', () => {
+    it('shows a fallback message when the clipboard write fails', async () => {
+      (navigator.clipboard.writeText as jest.Mock).mockRejectedValueOnce(
+        new Error('denied')
+      )
+      renderReceiveForm()
+      fireEvent.click(screen.getByTestId('copy-address-button'))
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          expect.stringContaining("Couldn't copy")
+        )
+      })
+      expect(toast.success).not.toHaveBeenCalled()
+    })
+
+    it('shows a fallback message when the clipboard API is unavailable', async () => {
+      const originalClipboard = navigator.clipboard
+      Object.defineProperty(navigator, 'clipboard', {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      })
+
+      renderReceiveForm()
+      fireEvent.click(screen.getByTestId('copy-address-button'))
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          expect.stringContaining("Couldn't copy")
+        )
+      })
+
+      Object.defineProperty(navigator, 'clipboard', {
+        value: originalClipboard,
+        configurable: true,
+        writable: true,
+      })
+    })
+
+    it('falls back to copying when sharing fails for a reason other than user cancellation', async () => {
+      const share = jest.fn().mockRejectedValue(new Error('share failed'))
+      Object.defineProperty(navigator, 'share', {
+        value: share,
+        configurable: true,
+        writable: true,
+      })
+
+      renderReceiveForm()
+      fireEvent.click(screen.getByTestId('share-address-button'))
+
+      await waitFor(() => {
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+          expect.stringContaining(TEST_STELLAR_ADDRESS)
+        )
+      })
+    })
+
+    it('does not fall back to copying when the user cancels the share sheet', async () => {
+      const abortError = Object.assign(new Error('cancelled'), { name: 'AbortError' })
+      const share = jest.fn().mockRejectedValue(abortError)
+      Object.defineProperty(navigator, 'share', {
+        value: share,
+        configurable: true,
+        writable: true,
+      })
+
+      renderReceiveForm()
+      fireEvent.click(screen.getByTestId('share-address-button'))
+
+      await waitFor(() => {
+        expect(share).toHaveBeenCalled()
+      })
+      expect(navigator.clipboard.writeText).not.toHaveBeenCalled()
+      expect(toast.error).not.toHaveBeenCalled()
+    })
   })
 })

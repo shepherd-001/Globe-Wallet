@@ -12,14 +12,27 @@ import { useReceive } from "@/hooks/useReceive"
 import { toast } from "sonner"
 
 async function copyText(text: string, label: string) {
-  await navigator.clipboard.writeText(text)
-  toast.success(`${label} copied to clipboard`)
+  try {
+    if (typeof navigator === "undefined" || !navigator.clipboard) {
+      throw new Error("Clipboard API is unavailable")
+    }
+    await navigator.clipboard.writeText(text)
+    toast.success(`${label} copied to clipboard`)
+  } catch {
+    toast.error(`Couldn't copy ${label.toLowerCase()}. Please copy it manually.`)
+  }
 }
 
 async function shareText(title: string, text: string, fallbackLabel: string) {
   if (typeof navigator !== "undefined" && navigator.share) {
-    await navigator.share({ title, text })
-    return
+    try {
+      await navigator.share({ title, text })
+      return
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return
+      }
+    }
   }
   await copyText(text, fallbackLabel)
 }
