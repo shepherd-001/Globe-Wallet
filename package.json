@@ -5,7 +5,8 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "eslint .",
+    "lint": "npm run check:env && eslint .",
+    "check:env": "node scripts/check-env-example.mjs",
     "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch",

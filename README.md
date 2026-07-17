@@ -119,11 +119,12 @@ pnpm dev
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ### Environment Setup
-Create a `.env.local` file:
+Copy `.env.example` to `.env.local`, then update values for your environment:
 ```
-NEXT_PUBLIC_STELLAR_NETWORK=testnet
-STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
+cp .env.example .env.local
 ```
+
+The app validates its environment during startup and prints actionable errors for missing or malformed values. Run `npm run check:env` after changing the schema or `.env.example`.
 
 ## Contributing
 
