@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { financeServices } from "../../../lib/services/container";
 import { db } from "../../../lib/db/mock-db";
 import { OffRampRequest } from "../../../lib/types";
+import { validateBearerToken } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
+  if (!validateBearerToken(request)) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
+
   let body: OffRampRequest;
 
   try {

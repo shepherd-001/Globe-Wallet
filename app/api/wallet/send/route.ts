@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { TransactionResult } from '@/lib/types'
 import { TEST_STELLAR_ADDRESS } from '@/lib/fixtures'
+import { validateBearerToken } from '@/lib/auth'
 
 interface SendBody {
   destination?: string
@@ -10,6 +11,10 @@ interface SendBody {
 }
 
 export async function POST(request: NextRequest) {
+  if (!validateBearerToken(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   let body: SendBody = {}
 
   try {
