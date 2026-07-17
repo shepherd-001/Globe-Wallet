@@ -36,7 +36,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ChartAnaly
     success: true,
     data: { period, points, average, peak },
   })
-/** @jest-environment node */
+
 import { NextRequest, NextResponse } from 'next/server'
 import type { AnalyticsRequest, AnalyticsResponse, ChartInterval } from '@/lib/types'
 import { AnalyticsService } from '@/lib/services/analytics.service'
