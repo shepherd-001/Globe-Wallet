@@ -1,3 +1,8 @@
+// Next loads next.config.mjs while creating its Jest configuration. Supply the
+// non-secret testnet defaults required by startup validation for test runs.
+process.env.NEXT_PUBLIC_STELLAR_NETWORK ??= 'testnet'
+process.env.STELLAR_HORIZON_URL ??= 'https://horizon-testnet.stellar.org'
+
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
