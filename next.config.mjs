@@ -1,6 +1,9 @@
 import { validateEnvironment } from './lib/env.mjs'
+import createNextIntlPlugin from 'next-intl/plugin'
 
 validateEnvironment()
+
+const withNextIntl = createNextIntlPlugin()
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -13,4 +16,4 @@ const nextConfig = {
   transpilePackages: ['@stellar/stellar-sdk', '@noble/hashes', '@noble/ed25519', '@noble/curves', '@scure/base'],
 }
 
-export default nextConfig
+export default withNextIntl(nextConfig)
