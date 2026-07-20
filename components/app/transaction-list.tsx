@@ -15,6 +15,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import type { Transaction } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VirtualList } from "@/components/ui/virtual-list";
 
 const categoryIcon: Record<string, LucideIcon> = {
   transfer: ArrowUpRight,
@@ -88,15 +89,19 @@ export function TransactionList({ limit }: TransactionListProps) {
     );
   }
 
+  const itemHeight = 64;
+  const containerHeight = items.length <= 5 ? items.length * itemHeight : 320;
+
   return (
-    <ul
-      className="divide-y divide-border"
+    <VirtualList
+      items={items}
+      itemHeight={itemHeight}
+      height={containerHeight}
+      listClassName="divide-y divide-border"
+      listTestId="transaction-list"
+      listAriaLabel={`${items.length} transaction${items.length === 1 ? "" : "s"}`}
       role="list"
-      data-testid="transaction-list"
-      data-transaction-count={items.length}
-      aria-label={`${items.length} transaction${items.length === 1 ? "" : "s"}`}
-    >
-      {items.map((tx) => {
+      renderItem={(tx, index, style) => {
         const isIncoming =
           (tx.type as string) === "in" ||
           (tx.type as string) === "receive" ||
@@ -109,6 +114,7 @@ export function TransactionList({ limit }: TransactionListProps) {
         return (
           <li
             key={tx.id}
+            style={style}
             className="flex items-center gap-3 py-3"
             role="listitem"
             data-testid={`transaction-${tx.id}`}
@@ -146,7 +152,8 @@ export function TransactionList({ limit }: TransactionListProps) {
             </div>
           </li>
         );
-      })}
-    </ul>
+      }}
+    />
   );
 }
+
