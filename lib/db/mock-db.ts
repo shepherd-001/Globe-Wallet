@@ -75,6 +75,7 @@ class MockDB {
     private recoveryKeys: RecoveryKeySchema[] = []
     private walletAccounts: WalletAccountSchema[] = []
     private transactions: Transaction[] = []
+    private txListeners: Set<(tx: Transaction) => void> = new Set()
     private trustlines: Trustline[] = []
     private syncState: SyncState = { lastSyncAt: null, totalSynced: 0, lastSyncCursor: null }
     private defaultUserId: string = ''
@@ -247,6 +248,14 @@ class MockDB {
 
     async saveTransaction(tx: Transaction): Promise<void> {
         this.transactions.unshift(tx)
+        // Notify any subscribed listeners of the new transaction
+        this.txListeners.forEach((cb) => {
+            try {
+                cb(tx)
+            } catch (e) {
+                // swallow listener errors to avoid breaking DB flow
+            }
+        })
     }
 
     async updateTransactionStatus(id: string, status: Transaction['status']): Promise<boolean> {
@@ -269,6 +278,17 @@ class MockDB {
         this.syncState.totalSynced += added
         if (newCursor) {
             this.syncState.lastSyncCursor = newCursor
+        }
+    }
+
+    /**
+     * Subscribe to real‑time transaction events.
+     * Returns an unsubscribe function.
+     */
+    subscribeToTransactions(callback: (tx: Transaction) => void): () => void {
+        this.txListeners.add(callback)
+        return () => {
+            this.txListeners.delete(callback)
         }
     }
 

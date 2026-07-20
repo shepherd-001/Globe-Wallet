@@ -66,6 +66,7 @@ export function VirtualList<T>({
         data-testid={listTestId}
         data-transaction-count={items.length}
         aria-label={listAriaLabel}
+        aria-live="polite"
         style={{ height: totalHeight, position: 'relative', margin: 0, padding: 0, listStyle: 'none' }}
       >
         {visibleItems}
