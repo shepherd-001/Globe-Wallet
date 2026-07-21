@@ -1,6 +1,7 @@
 import { WalletService } from '../../../lib/services/wallet.service'
 import { StellarServiceError, WalletServiceError } from '../../../lib/types'
 import { TEST_STELLAR_ADDRESS } from '../../../lib/fixtures'
+import { db } from '../../../lib/db/mock-db'
 
 describe('WalletService', () => {
     let service: WalletService
@@ -105,6 +106,45 @@ describe('WalletService', () => {
 
             await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 10, 'XLM'))
                 .rejects.toThrow('Payment verification failed')
+        })
+
+        // Issue #63: the route can report completed/pending/failed depending on
+        // real ledger outcome — the persisted record must reflect that, not
+        // always be hardcoded to 'completed'.
+        it('persists the real hash and status the route reported, not a hardcoded "completed"', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({
+                    success: true,
+                    hash: 'a'.repeat(64),
+                    status: 'pending',
+                }),
+            })
+
+            await service.sendPayment(TEST_STELLAR_ADDRESS, 25, 'XLM')
+
+            const [latest] = await db.getTransactions()
+            expect(latest.status).toBe('pending')
+            expect(latest.stellarHash).toBe('a'.repeat(64))
+        })
+
+        it('persists status "failed" when the route reports a ledger-level rejection', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({
+                    success: false,
+                    hash: 'b'.repeat(64),
+                    status: 'failed',
+                    error: 'Horizon rejected the transaction (HTTP 400): op_underfunded',
+                }),
+            })
+
+            const result = await service.sendPayment(TEST_STELLAR_ADDRESS, 25, 'XLM')
+
+            expect(result.success).toBe(false)
+            const [latest] = await db.getTransactions()
+            expect(latest.status).toBe('failed')
+            expect(latest.stellarHash).toBe('b'.repeat(64))
         })
     })
 })

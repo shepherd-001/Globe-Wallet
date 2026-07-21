@@ -163,6 +163,9 @@ export class WalletService extends BaseService implements IWalletService {
 
                 const result = await response.json() as TransactionResult
 
+                // Persist whatever the network actually reported — a route that
+                // rejected or couldn't confirm the payment must not be recorded
+                // as if it had completed (see Issue #63).
                 await db.saveTransaction({
                     id: Math.floor(Math.random() * 1000000).toString(),
                     type: 'send',
@@ -170,7 +173,7 @@ export class WalletService extends BaseService implements IWalletService {
                     asset,
                     address: destination,
                     date: 'Just now',
-                    status: 'completed',
+                    status: result.status ?? (result.success ? 'completed' : 'failed'),
                     stellarHash: result.hash
                 })
 
