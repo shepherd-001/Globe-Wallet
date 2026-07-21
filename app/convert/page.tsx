@@ -448,12 +448,12 @@ export default function ConvertPage() {
                   <span className="text-sm font-medium">
                     1 {fromCurrency} = {currentRate.rate.toFixed(6)} {toCurrency}
                   </span>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <TrendingUp className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
                 </div>
                 {quote && (
                   <div className="flex items-center gap-2 mt-1">
                     {secondsRemaining !== null && secondsRemaining > 0 ? (
-                      <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-300">
+                      <Badge variant="outline" className="text-[10px] text-emerald-700 dark:text-emerald-400 border-emerald-300">
                         Quote updates in {secondsRemaining}s
                       </Badge>
                     ) : (

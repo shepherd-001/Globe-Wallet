@@ -180,7 +180,7 @@ export function SendForm() {
       >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-500" aria-hidden />
+            <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400" aria-hidden />
             Send Complete
           </CardTitle>
         </CardHeader>
@@ -189,7 +189,7 @@ export function SendForm() {
             role="status"
             aria-live="polite"
             data-testid="send-success"
-            className="p-3 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-sm flex flex-col gap-1"
+            className="p-3 rounded-md bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-sm flex flex-col gap-1"
           >
             <span className="font-semibold">Transaction Successful</span>
             {result.hash && (

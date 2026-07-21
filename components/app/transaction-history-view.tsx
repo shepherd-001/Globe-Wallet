@@ -134,8 +134,8 @@ export function TransactionHistoryView() {
                     className={cn(
                       'flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
                       isIncoming
-                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30'
-                        : 'bg-red-100 text-red-500 dark:bg-red-900/30',
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
                     )}
                   >
                     {isIncoming ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
@@ -152,7 +152,7 @@ export function TransactionHistoryView() {
                     <span
                       className={cn(
                         'text-sm font-semibold',
-                        isIncoming ? 'text-emerald-600' : 'text-foreground',
+                        isIncoming ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground',
                       )}
                     >
                       {isIncoming ? '+' : '-'}{tx.amount.toLocaleString()} {tx.asset}
