@@ -17,6 +17,8 @@ const customJestConfig = {
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/tests/e2e/'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   transformIgnorePatterns: [
+    // Kept in sync with next.config.mjs's transpilePackages (uint8array-extras
+    // added there for Issue #63 — see the comment on that array).
     '/node_modules/(?!(@stellar/stellar-sdk|@noble|@stellar|uint8array-extras)/)',
   ],
   moduleNameMapper: {

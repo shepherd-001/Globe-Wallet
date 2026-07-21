@@ -124,6 +124,22 @@ describe('SendForm Component (Issue #14)', () => {
     })
   })
 
+  it('should show a distinct pending message when the ledger outcome is unconfirmed (Issue #63)', async () => {
+    mockWallet.sendPayment.mockResolvedValue({ success: true, hash: 'a'.repeat(64), status: 'pending' })
+    renderSendForm()
+
+    fireEvent.change(screen.getByTestId('address-input'), { target: { value: VALID_ADDRESS } })
+    fireEvent.change(screen.getByTestId('amount-input'), { target: { value: '100' } })
+    await submitSendForm()
+
+    await waitFor(() => {
+      const successEl = screen.getByTestId('send-success')
+      expect(successEl).toBeInTheDocument()
+      expect(successEl).toHaveTextContent(/awaiting network confirmation/i)
+    })
+    expect(screen.getByText('Send Submitted')).toBeInTheDocument()
+  })
+
   it('should reset form on "Send another" click after success', async () => {
     renderSendForm()
 

@@ -14,9 +14,14 @@ interface SorobanConfig {
 function loadConfig(): SorobanConfig | null {
   const rpcUrl = process.env.SOROBAN_RPC_URL
   const contractId = process.env.SOROBAN_CONTRACT_ID_GLOBE_WALLET
+  // NOTE (Issue #63 drive-by fix): this previously hardcoded the Futurenet
+  // passphrase ("...Future Network...") for the "testnet" branch. Testnet
+  // and Futurenet are different networks with different passphrases: a
+  // transaction signed with the wrong one fails signature verification on
+  // the network it's actually submitted to. Use the SDK's own constants.
   const networkPassphrase = process.env.STELLAR_NETWORK_PASSPHRASE
     || (process.env.NEXT_PUBLIC_STELLAR_NETWORK === 'testnet'
-      ? 'Test SDF Future Network ; October 2022'
+      ? 'Test SDF Network ; September 2015'
       : 'Public Global Stellar Network ; September 2015')
 
   if (!rpcUrl || !contractId) return null
