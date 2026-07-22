@@ -29,3 +29,24 @@ export const MOCK_CRYPTO_ASSETS: CryptoAsset[] = [
     color: 'bg-accent',
   },
 ]
+
+export const SUPPORTED_STELLAR_ASSETS = [
+  {
+    code: 'XLM' as AssetCode,
+    name: 'Stellar Lumens',
+    issuer: 'native',
+    color: 'bg-foreground',
+  },
+  {
+    code: 'USDC' as AssetCode,
+    name: 'USD Coin',
+    issuer: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
+    color: 'bg-primary',
+  },
+  {
+    code: 'USDT' as AssetCode,
+    name: 'Tether USD',
+    issuer: 'GCQTGZZZ5GNCIRERPBEWHDQO0TG3EFG5BHTO223UOM8F7B3I6T5B5E5W',
+    color: 'bg-accent',
+  },
+]

@@ -12,6 +12,7 @@ export interface ExchangeRate {
 export class RatesService extends BaseService {
   private cache: Map<string, { rates: ExchangeRate[]; timestamp: number }> = new Map()
   private readonly cacheTTL = 60000 // 1 minute
+  private readonly fetchTimeout = 3000 // 3 seconds
 
   constructor() {
     super('RatesService')
@@ -67,40 +68,50 @@ export class RatesService extends BaseService {
       include: 'market_cap_change_24h_in_currency',
     })
 
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?${params.toString()}`,
-      { next: { revalidate: 60 } }
-    )
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.fetchTimeout)
 
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.statusText}`)
-    }
+    try {
+      const response = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?${params.toString()}`,
+        { 
+          next: { revalidate: 60 },
+          signal: controller.signal
+        }
+      )
 
-    const data = await response.json()
-    const rates: ExchangeRate[] = []
-    const fromPriceUsd = data[fromCoinId]?.usd
-
-    if (!fromPriceUsd) {
-      throw new Error(`Could not fetch price for ${from}`)
-    }
-
-    supportedCurrencies.forEach((to) => {
-      if (to === from) return
-
-      const toCoinId = coinIds[to]
-      const toPriceUsd = data[toCoinId]?.usd
-
-      if (toPriceUsd !== undefined && typeof toPriceUsd === 'number') {
-        rates.push({
-          from,
-          to,
-          rate: toPriceUsd / fromPriceUsd,
-          change24h: 0,
-        })
+      if (!response.ok) {
+        throw new Error(`CoinGecko API error: ${response.statusText}`)
       }
-    })
 
-    return rates
+      const data = await response.json()
+      const rates: ExchangeRate[] = []
+      const fromPriceUsd = data[fromCoinId]?.usd
+
+      if (!fromPriceUsd) {
+        throw new Error(`Could not fetch price for ${from}`)
+      }
+
+      supportedCurrencies.forEach((to) => {
+        if (to === from) return
+
+        const toCoinId = coinIds[to]
+        const toPriceUsd = data[toCoinId]?.usd
+
+        if (toPriceUsd !== undefined && typeof toPriceUsd === 'number') {
+          rates.push({
+            from,
+            to,
+            rate: toPriceUsd / fromPriceUsd,
+            change24h: 0,
+          })
+        }
+      })
+
+      return rates
+    } finally {
+      clearTimeout(timeoutId)
+    }
   }
 
   private getMockRates(from: AssetCode, supportedCurrencies: AssetCode[]): ExchangeRate[] {

@@ -50,6 +50,11 @@ export default function ConvertPage() {
     EUR: 450,
   };
 
+  // Debounce Ref
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Fetch summary exchange rate for header card
   useEffect(() => {
     const fetchRates = async () => {
       setIsLoadingRates(true);
@@ -90,6 +95,7 @@ export default function ConvertPage() {
     }
   };
 
+  // Countdown timer for quote expiration
   useEffect(() => {
     if (fromAmount) {
       setToAmount(calculateConversion(fromAmount, true));
@@ -148,15 +154,29 @@ export default function ConvertPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center gap-4 p-4 pb-2">
-        <Link
-          href="/"
-          aria-label="Go back to home"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+      <div className="flex items-center justify-between p-4 pb-2">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            aria-label="Go back to home"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          <h1 className="text-lg font-semibold">Convert</h1>
+        </div>
+
+        {/* Slippage Settings Toggle */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowSlippageSettings(!showSlippageSettings)}
+          className="flex items-center gap-1.5 text-xs"
+          aria-label="Slippage Settings"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        </Link>
-        <h1 className="text-lg font-semibold">Convert</h1>
+          <Settings2 className="h-3.5 w-3.5" />
+          <span>{slippageTolerance}% slippage</span>
+        </Button>
       </div>
 
       <div className="px-4 pb-4 space-y-4">
@@ -169,18 +189,38 @@ export default function ConvertPage() {
           </Card>
         )}
 
-        {/* Error state */}
-        {ratesError && !isLoadingRates && (
-          <Card className="p-4 border-red-200 bg-red-50">
-            <div className="flex items-center gap-2 text-sm text-red-700">
-              <AlertCircle className="h-4 w-4" />
-              <span>Unable to load live rates. Using cached data.</span>
+        {/* Error State — No Path Found */}
+        {isNoPathError && !isLoadingQuote && (
+          <Card className="p-4 border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+            <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-300">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div>
+                <span className="font-medium">No conversion path available</span>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                  There is currently no orderbook liquidity or AMM pool connecting {fromCurrency} to {toCurrency}.
+                </p>
+              </div>
             </div>
           </Card>
         )}
 
-        {/* Exchange Rate Card */}
-        {currentRate && !isLoadingRates && (
+        {/* Error State — Network Failure */}
+        {isNetworkError && !isLoadingQuote && (
+          <Card className="p-4 border-red-200 bg-red-50 dark:bg-red-950/20">
+            <div className="flex items-start gap-2 text-sm text-red-800 dark:text-red-300">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div>
+                <span className="font-medium">Horizon Network Error</span>
+                <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">
+                  Unable to reach Stellar network server. Check internet connection and retry.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Exchange Rate Summary Card */}
+        {currentRate && !isLoadingQuote && !isNoPathError && !isNetworkError && (
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -314,9 +354,17 @@ export default function ConvertPage() {
         {fromAmount && toAmount && (
           <Card className="p-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Info className="h-4 w-4" />
-                Transaction Details
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Info className="h-4 w-4 text-primary" />
+                  <span>Transaction Details</span>
+                </div>
+                {quote?.path && quote.path.length > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Route className="h-3.5 w-3.5" />
+                    <span>Path: {quote.path.map((p) => p.code).join(" → ")}</span>
+                  </div>
+                )}
               </div>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
@@ -334,6 +382,24 @@ export default function ConvertPage() {
                   <span className="text-muted-foreground">Processing Fee</span>
                   <span>0.1%</span>
                 </div>
+                {quote && (
+                  <div className="flex justify-between text-xs text-muted-foreground pt-0.5">
+                    <span>
+                      {quote.mode === "strictSend" ? "Guaranteed Minimum Output" : "Maximum Input Limit"} ({quote.slippageTolerance}%)
+                    </span>
+                    <span>
+                      {quote.mode === "strictSend" ? `${quote.destMin} ${toCurrency}` : `${quote.sendMax} ${fromCurrency}`}
+                    </span>
+                  </div>
+                )}
+                {quote?.priceImpact !== null && quote?.priceImpact !== undefined && (
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Price Impact</span>
+                    <span className={quote.priceImpact > 2 ? "text-amber-600 font-medium" : ""}>
+                      {quote.priceImpact > 0 ? `${quote.priceImpact}%` : "< 0.01%"}
+                    </span>
+                  </div>
+                )}
                 <div className="border-t pt-1 mt-2 flex justify-between font-medium">
                   <span>You'll receive</span>
                   <span>
@@ -354,8 +420,8 @@ export default function ConvertPage() {
             !fromAmount ||
             !toAmount ||
             isConverting ||
-            isLoadingRates ||
-            !currentRate ||
+            isLoadingQuote ||
+            isNoPathError ||
             parseFloat(fromAmount) <= 0
           }
         >

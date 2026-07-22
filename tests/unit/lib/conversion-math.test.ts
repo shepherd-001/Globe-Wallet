@@ -15,6 +15,8 @@
  * All original Issue #20 tests preserved and verified to pass.
  */
 
+import fc from 'fast-check'
+import Decimal from 'decimal.js'
 import {
   applyConversionRate,
   applyReverseRate,

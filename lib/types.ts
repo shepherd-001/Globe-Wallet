@@ -7,6 +7,40 @@ export type AssetCode = "XLM" | "USDC" | "USDT";
 export type CurrencyCode = "NGN" | "USD" | "EUR" | "GBP";
 export type TransactionDirection = "in" | "out";
 
+// ── Claimable Balances (Issue #99) ───────────────────────────────────────────
+
+/** Status of a claimable balance on the Stellar network */
+export type ClaimableBalanceStatus = "available" | "claimed" | "deleted";
+
+/** Claimant definition for a claimable balance */
+export interface Claimant {
+  destination: string;
+  /** Predicate for vesting conditions */
+  predicate?: ClaimableBalancePredicate;
+}
+
+/** Predicate for claimable balance vesting conditions */
+export interface ClaimableBalancePredicate {
+  /** Unix timestamp for time-based vesting */
+  simpleTime?: string;
+  /** Simple relative time in seconds from now */
+  simpleRelative?: number;
+}
+
+/** A claimable balance on the Stellar network */
+export interface ClaimableBalance {
+  id: string;
+  balanceId: string;
+  asset: AssetCode;
+  amount: number;
+  claimants: Claimant[];
+  sponsor?: string;
+  status: ClaimableBalanceStatus;
+  createdAt: string;
+  memo?: string;
+  memoType?: string;
+}
+
 export type TransactionCategory =
   | "payment"
   | "exchange"
@@ -21,10 +55,28 @@ export type TransactionCategory =
 // ── Domain Models ───────────────────────────────────────────────────────────
 
 export interface StellarAccount {
+  /** Stable wallet-account id when resolved from the multi-account store */
+  id?: string;
   publicKey: string;
   name: string;
   network: string;
   isFunded: boolean;
+}
+
+/** Persisted Stellar wallet account belonging to a user (supports multi-account). */
+export interface WalletAccount {
+  id: string;
+  userId: string;
+  publicKey: string;
+  name: string;
+  accountType: "standard" | "premium";
+  /** Primary account used when no accountId is supplied */
+  isPrimary: boolean;
+  /** Currently selected account for wallet/sync operations */
+  isActive: boolean;
+  network: string;
+  isFunded: boolean;
+  createdAt: string;
 }
 
 export interface Wallet {
@@ -187,6 +239,32 @@ export interface PaymentCard {
   gradient: string;
 }
 
+export interface Trustline {
+  asset: AssetCode;
+  issuer: string;
+  established: boolean;
+  createdAt: string;
+}
+
+export interface TrustlineResult {
+  success: boolean;
+  asset: AssetCode;
+  action: 'add' | 'remove';
+  reserveImpact: number;
+  error?: string;
+}
+
+export interface ChangeTrustRequest {
+  asset: AssetCode;
+  action: 'add' | 'remove';
+}
+
+export interface ChangeTrustResponse {
+  success: boolean;
+  data?: TrustlineResult;
+  error?: string;
+}
+
 export interface Balance {
   asset: AssetCode;
   amount: number;
@@ -213,20 +291,33 @@ export interface Transaction {
   detail?: string;
 }
 
-export interface SwapEstimate {
-  from: AssetCode;
-  to: AssetCode;
-  fromAmount: number;
-  toAmount: number;
-  path: AssetCode[];
-  priceImpact: number;
-}
-
 export interface TransactionResult {
   success: boolean;
   hash?: string;
   error?: string;
   status?: "completed" | "pending" | "failed";
+}
+
+export interface ClaimRequest {
+  balanceId: string;
+  accountId?: string;
+}
+
+export interface ClaimResponse {
+  success: boolean;
+  hash?: string;
+  status?: "completed" | "pending" | "failed";
+  error?: string;
+}
+
+export interface ClaimableBalancesResponse {
+  success: boolean;
+  data?: {
+    balances: ClaimableBalance[];
+    totalAmount: number;
+    count: number;
+  };
+  error?: string;
 }
 
 export interface FeeEstimate {
@@ -275,13 +366,6 @@ export class WalletServiceError extends ServiceError {
   }
 }
 
-export class ExchangeServiceError extends ServiceError {
-  constructor(message: string, code?: string) {
-    super(message, code);
-    this.name = "ExchangeServiceError";
-  }
-}
-
 export class OffRampServiceError extends ServiceError {
   constructor(message: string, code?: string) {
     super(message, code);
@@ -306,37 +390,38 @@ export class FiatServiceError extends ServiceError {
 // ── Service Interfaces ───────────────────────────────────────────────────────
 
 export interface IWalletService {
-  getAccountInfo(): StellarAccount;
-  getBalance(): Promise<Balance[]>;
+  /** Resolve account info; omits accountId → active/primary account */
+  getAccountInfo(accountId?: string): StellarAccount;
+  /** All Stellar accounts for a user (defaults to the seeded demo user) */
+  listAccounts(userId?: string): WalletAccount[];
+  /** Id of the currently selected account */
+  getActiveAccountId(): string | null;
+  /** Switch the active account used by default for wallet operations */
+  switchAccount(accountId: string): WalletAccount;
+  getBalance(accountId?: string): Promise<Balance[]>;
   sendPayment(
     destination: string,
     amount: number,
     asset: AssetCode,
     memo?: string,
+    accountId?: string,
   ): Promise<TransactionResult>;
-  generateReceiveAddress(): string;
+  generateReceiveAddress(accountId?: string): string;
   validateAddress(address: string): boolean;
-  getTransactionHistory(): Promise<Transaction[]>;
+  getTransactionHistory(accountId?: string): Promise<Transaction[]>;
   shortenKey(key: string, lead?: number, tail?: number): string;
+  getTrustlines(accountId?: string): Promise<Trustline[]>;
+  changeTrustline(asset: AssetCode, action: 'add' | 'remove', accountId?: string): Promise<TrustlineResult>;
+  // ── Claimable Balances (Issue #99) ─────────────────────────────────────
+  listClaimableBalances(accountId?: string): Promise<ClaimableBalance[]>;
+  claimBalance(balanceId: string, accountId?: string): Promise<TransactionResult>;
+  hasClaimableBalances(address: string): Promise<boolean>;
 }
 
 export interface IPricingService {
   getAssets(): CryptoAsset[];
   getPrice(code: AssetCode): Promise<number>;
   formatAsset(amount: number, code: AssetCode, hidden?: boolean): string;
-}
-
-export interface IExchangeService {
-  estimateSwap(
-    from: AssetCode,
-    to: AssetCode,
-    amount: number,
-  ): Promise<SwapEstimate>;
-  executeSwap(
-    from: AssetCode,
-    to: AssetCode,
-    amount: number,
-  ): Promise<TransactionResult>;
 }
 
 export interface IOffRampService {
@@ -350,13 +435,28 @@ export interface IOffRampService {
   getMethods(): OffRampMethod[];
 }
 
+/**
+ * GlobeWallet Soroban contract types.
+ * Sourced from contracts/soroban-spec.json (hand-maintained from Orbit-Wal/contract).
+ */
+export interface SorobanAssetInfo {
+  code: string
+  issuer?: string
+}
+
 export interface ISorobanService {
-  createSavingsGoal(
-    amount: number,
-    asset: AssetCode,
-    deadline: number,
-  ): Promise<TransactionResult>;
-  stakeAssets(amount: number, asset: AssetCode): Promise<TransactionResult>;
+  /** Register a whitelisted asset for a user wallet. Max 50 assets. */
+  addAsset(user: string, asset: SorobanAssetInfo): Promise<TransactionResult>
+  /** Remove an asset from a user's wallet by asset code. */
+  removeAsset(user: string, asset: SorobanAssetInfo): Promise<TransactionResult>
+  /** Return the list of whitelisted assets for a user. */
+  getAssets(user: string): Promise<SorobanAssetInfo[]>
+  /** Set the daily spend limit (in stroops) for a specific asset. */
+  setSpendLimit(user: string, asset: SorobanAssetInfo, limit: bigint): Promise<TransactionResult>
+  /** Return the daily spend limit for a specific asset. */
+  getSpendLimit(user: string, asset: SorobanAssetInfo): Promise<bigint>
+  /** Record a spend and reject if it would exceed the daily limit. */
+  recordSpend(user: string, asset: SorobanAssetInfo, amount: bigint): Promise<TransactionResult>
 }
 
 export interface IFiatService {
@@ -421,12 +521,20 @@ export interface IAssetService {
 }
 
 export interface IStellarService {
-  getAccountInfo(): StellarAccount;
-  generateReceiveAddress(): string;
+  /** Resolve account info; omits accountId → active/primary account */
+  getAccountInfo(accountId?: string): StellarAccount;
+  listAccounts(userId?: string): WalletAccount[];
+  getActiveAccountId(): string | null;
+  switchAccount(accountId: string): WalletAccount;
+  generateReceiveAddress(accountId?: string): string;
   validateAddress(address: string): boolean;
   shortenKey(key: string, lead?: number, tail?: number): string;
   getOffRampMethods(): OffRampMethod[];
   getOffRampRate(currency: CurrencyCode): number;
+  // ── Claimable Balances (Issue #99) ─────────────────────────────────────
+  listClaimableBalances(accountId?: string): ClaimableBalance[];
+  claimBalance(balanceId: string, accountId?: string): TransactionResult;
+  hasClaimableBalances(address: string): boolean;
 }
 
 // ── Convert Page Types (Issue #20) ──────────────────────────────────────────
@@ -469,6 +577,83 @@ export interface ConversionResult {
   timestamp: string
 }
 
+// ── Path Payment Types (Issue #98) ───────────────────────────────────────────
+
+export type PathPaymentMode = 'strictSend' | 'strictReceive'
+
+export interface PaymentHopAsset {
+  code: string
+  issuer?: string
+  type: string
+}
+
+export interface PaymentQuote {
+  mode: PathPaymentMode
+  sourceAsset: AssetCode
+  destinationAsset: AssetCode
+  executableSourceAmount: string
+  executableDestinationAmount: string
+  path: PaymentHopAsset[]
+  estimatedPrice: number
+  priceImpact: number | null
+  slippageTolerance: number
+  destMin: string
+  sendMax: string
+  expiresAt: number
+  createdAt: number
+  isStale?: boolean
+}
+
+export interface PathPaymentParams {
+  sourceAsset: AssetCode
+  destinationAsset: AssetCode
+  amount: string
+  mode: PathPaymentMode
+  slippageTolerance?: number
+  destinationAccount?: string
+}
+
+export interface ExecutePathPaymentParams {
+  quote: PaymentQuote
+  sourceSecretOrKeypair?: string
+  destinationAccount?: string
+}
+
+export interface PathPaymentExecutionResult {
+  success: boolean
+  hash?: string
+  ledger?: number
+  error?: string
+  sourceAmountPaid?: string
+  destinationAmountReceived?: string
+}
+
+export interface IPathPaymentService {
+  findQuote(params: PathPaymentParams): Promise<PaymentQuote>
+  executePayment(params: ExecutePathPaymentParams): Promise<PathPaymentExecutionResult>
+}
+
+export class NoPathFoundError extends Error {
+  constructor(message = 'No available conversion path found on Stellar network') {
+    super(message)
+    this.name = 'NoPathFoundError'
+  }
+}
+
+export class SlippageExceededError extends Error {
+  constructor(message = 'Execution amount exceeds configured slippage tolerance') {
+    super(message)
+    this.name = 'SlippageExceededError'
+  }
+}
+
+export class StaleQuoteError extends Error {
+  constructor(message = 'Quote has expired. Please refresh the quote before converting.') {
+    super(message)
+    this.name = 'StaleQuoteError'
+  }
+}
+
 // ── Onboarding Types (Issue #29) ─────────────────────────────────────────────
 
 /** Tracks completion of developer onboarding steps for new contributors. */
@@ -498,6 +683,26 @@ export interface DeveloperProfile {
   /** Whether the developer prefers to see advanced architecture notes */
   advancedMode: boolean;
 }
+
+// ── Error Codes (Issue #104) ─────────────────────────────────────────────────
+
+export const ErrorCodes = {
+  ERR_INVALID_ADDRESS: 'ERR_INVALID_ADDRESS',
+  ERR_INVALID_AMOUNT: 'ERR_INVALID_AMOUNT',
+  ERR_MISSING_ASSET: 'ERR_MISSING_ASSET',
+  ERR_MISSING_QUERY: 'ERR_MISSING_QUERY',
+  ERR_NOT_FEDERATED: 'ERR_NOT_FEDERATED',
+  ERR_NOT_FOUND: 'ERR_NOT_FOUND',
+  ERR_LOOKUP_FAILED: 'ERR_LOOKUP_FAILED',
+  ERR_INSUFFICIENT_FUNDS: 'ERR_INSUFFICIENT_FUNDS',
+  ERR_NETWORK_TIMEOUT: 'ERR_NETWORK_TIMEOUT',
+  ERR_SLIPPAGE_EXCEEDED: 'ERR_SLIPPAGE_EXCEEDED',
+  ERR_NO_PATH_FOUND: 'ERR_NO_PATH_FOUND',
+  ERR_STALE_QUOTE: 'ERR_STALE_QUOTE',
+  ERR_NETWORK_FAILURE: 'ERR_NETWORK_FAILURE',
+} as const
+
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
 
 // ── Off-Ramp Validation Types (Issue #21) ────────────────────────────────────
 
@@ -556,7 +761,28 @@ export interface PersistedWithdrawal {
 
 // ── Container Interface ──────────────────────────────────────────────────────
 
+/** Selects which implementation to use for a given service. */
+export type ServiceMode = 'mock' | 'live'
 
+/** Per-service override map. Omitted keys fall back to `environment`. */
+export interface ServiceConfig {
+  wallet?: ServiceMode
+  offRamp?: ServiceMode
+  pricing?: ServiceMode
+  fiat?: ServiceMode
+  soroban?: ServiceMode
+  asset?: ServiceMode
+  stellar?: ServiceMode
+  pathPayment?: ServiceMode
+}
+
+/** Top-level configuration for the service container. */
+export interface ContainerConfig {
+  /** Shortcut that applies to every service not listed in `services`. */
+  environment?: ServiceMode
+  /** Per-service overrides. */
+  services?: ServiceConfig
+}
 
 // ── Issue #19: Enhanced Enterprise Types ──────────────────────────────────────
 
@@ -619,7 +845,6 @@ export interface PaginatedResponse<T> {
 export interface IFinanceServiceContainer {
   wallet: IWalletService;
   pricing: IPricingService;
-  exchange: IExchangeService;
   offRamp: IOffRampService;
   fiat: IFiatService;
   soroban: ISorobanService;
@@ -627,6 +852,7 @@ export interface IFinanceServiceContainer {
   // Legacy compatibility
   asset: IAssetService;
   stellar: IStellarService;
+  pathPayment: IPathPaymentService;
 }
 
 // ── Accessibility Audit (Issue #24) ─────────────────────────────────────────
@@ -725,7 +951,6 @@ export interface IShellService {
   getMainContentId(): string
   getSafeAreaInsets(): SafeAreaInsets
 }
-
 // ── Chart Types (Issue #17) ──────────────────────────────────────────────────
 
 /** A single data point in the weekly activity bar chart. */
@@ -850,7 +1075,7 @@ export interface TransactionSyncResult {
 }
 
 export interface ITransactionSyncService {
-  syncFromNetwork(): Promise<TransactionSyncResult>;
+  syncFromNetwork(accountId?: string): Promise<TransactionSyncResult>;
   getLastSyncTime(): string | null;
   getSyncStatus(): TransactionSyncStatus;
   getRecentTransactions(limit: number): Promise<Transaction[]>;

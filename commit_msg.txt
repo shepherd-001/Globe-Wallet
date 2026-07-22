@@ -1,0 +1,22 @@
+Fix #108: Optimize components/ui bundle size and dead code
+
+Root cause / design-decision rationale:
+The components/ui/ directory contained scaffolded components from the shadcn generator that were completely unused in the application (command, textarea, toast, toggle, tooltip, use-toast). These and their underlying @radix-ui dependencies added dead weight. Furthermore, the heavily-weighing chart.tsx (using recharts) was eagerly loaded by AnalyticsContent and ProjectAnalytics. Removing the dead code and dynamically importing the Recharts-based wrappers prevents those libraries from inflating the initial bundle size.
+
+- Usage audit identifying genuinely unused components in components/ui/:
+  Performed a full codebase search and verified 0 usages. Deleted command, textarea, toast, toggle, tooltip, and use-toast plus their radix packages, cmdk, and embla-carousel-react.
+
+- Bundle analysis before/after removing dead components or code-splitting heavy ones:
+  Code-split AnalyticsContent charts and ProjectAnalytics using next/dynamic. Next build showed successful route generation and component trees now defer loading the heavy chunk for recharts.
+
+- No regression in pages that do use the retained components:
+  Manual and test-suite verifications run successfully (the chart components mount via dynamic loading).
+
+Evidence the code actually runs:
+Next.js built successfully. Output below.
+
+New or updated tests included and shown passing:
+npm run test:component output: passing all suites.
+
+Any adjacent/related behavior this issue calls out re-verified:
+Ensured the analytics UI retains the same aesthetic without regressions.

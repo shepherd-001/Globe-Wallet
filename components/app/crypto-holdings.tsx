@@ -9,6 +9,8 @@ import { formatCryptoAmount } from "@/lib/helpers/format"
 import type { AssetCode } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { TrustlineManager } from "./trustline-manager"
+import { Button } from "@/components/ui/button"
 
 const assetGlyph: Record<AssetCode, string> = {
   XLM: "✦",
@@ -27,9 +29,16 @@ export function CryptoHoldings() {
     <section className="px-4 pt-6" data-testid="crypto-holdings">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">Crypto on Stellar</h2>
-        <Link href="/convert" className="flex items-center text-xs font-medium text-primary">
-          Convert <ChevronRight className="h-3.5 w-3.5" />
-        </Link>
+        <div className="flex items-center gap-3">
+          <TrustlineManager>
+            <Button variant="link" className="h-auto p-0 text-xs font-medium text-primary">
+              Manage Trustlines
+            </Button>
+          </TrustlineManager>
+          <Link href="/convert" className="flex items-center text-xs font-medium text-primary">
+            Convert <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
       </div>
       <Card className="divide-y divide-border p-0">
         {loading ? (
@@ -63,8 +72,8 @@ export function CryptoHoldings() {
               >
                 <span
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full text-base font-bold text-background",
-                    asset.color,
+                    "flex h-10 w-10 items-center justify-center rounded-full text-base font-bold",
+                    asset.color === 'bg-accent' ? 'bg-accent text-accent-foreground dark:text-foreground' : cn('text-background', asset.color),
                   )}
                   aria-hidden
                 >
