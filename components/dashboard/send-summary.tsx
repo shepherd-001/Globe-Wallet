@@ -8,18 +8,47 @@ interface SendSummaryProps {
 }
 
 export function SendSummary({ confirmation }: SendSummaryProps) {
-  const { recipient, recipientLabel, amount, asset, memo, estimatedFee } = confirmation
+  const {
+    recipient,
+    recipientLabel,
+    amount,
+    asset,
+    memo,
+    estimatedFee,
+    federatedInput,
+    federationMemo,
+  } = confirmation
+
+  const recipientDisplay =
+    recipientLabel ??
+    (federatedInput
+      ? `${federatedInput} → ${recipient.slice(0, 8)}…${recipient.slice(-6)}`
+      : `${recipient.slice(0, 8)}…${recipient.slice(-6)}`)
+
   return (
     <div
       data-testid="send-summary"
       aria-label="Send confirmation summary"
       className="space-y-2 rounded-md border border-primary/20 bg-muted/30 p-3 text-sm"
     >
-      <Row label="To" value={recipientLabel ?? `${recipient.slice(0, 8)}…${recipient.slice(-6)}`} />
+      <Row label="To" value={recipientDisplay} testId="summary-recipient" />
+      {federatedInput && (
+        <Row
+          label="Address"
+          value={`${recipient.slice(0, 8)}…${recipient.slice(-6)}`}
+          testId="summary-resolved-address"
+        />
+      )}
       <Separator />
       <Row label="Amount" value={`${amount} ${asset}`} testId="summary-amount" />
       <Row label="Network fee" value={`${estimatedFee} XLM`} testId="summary-fee" />
-      {memo && <Row label="Memo" value={memo} />}
+      {(memo || federationMemo) && (
+        <Row
+          label="Memo"
+          value={memo ?? federationMemo ?? ""}
+          testId="summary-memo"
+        />
+      )}
       <Separator />
       <Row
         label="Total deducted"
@@ -30,11 +59,21 @@ export function SendSummary({ confirmation }: SendSummaryProps) {
   )
 }
 
-function Row({ label, value, testId }: { label: string; value: string; testId?: string }) {
+function Row({
+  label,
+  value,
+  testId,
+}: {
+  label: string
+  value: string
+  testId?: string
+}) {
   return (
     <div className="flex justify-between text-xs">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium" data-testid={testId}>{value}</span>
+      <span className="font-medium font-mono break-all text-right max-w-[60%]" data-testid={testId}>
+        {value}
+      </span>
     </div>
   )
 }

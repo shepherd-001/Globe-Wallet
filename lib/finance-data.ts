@@ -4,6 +4,7 @@
  */
 
 import { CurrencyCode, AssetCode, Wallet, CryptoAsset, Transaction, Contact, SavingsGoal, PaymentCard } from './types'
+import { TEST_STELLAR_ADDRESS, MOCK_STELLAR_ACCOUNT, MOCK_MEMO } from './fixtures/stellar'
 
 export const wallets: Wallet[] = [
   { id: 'w1', code: "NGN", name: "Nigerian Naira", balance: 1284500.75, color: "bg-green-500", changePct: 2.4, label: "NGN" },
@@ -75,10 +76,14 @@ export const cryptoAssets: CryptoAsset[] = [
   },
 ]
 
+// Re-exported from the canonical wallet fixture (lib/fixtures/stellar.ts) so the
+// receive flow has a single source of truth instead of a second, drifting literal.
+export { TEST_STELLAR_ADDRESS }
+
 export const stellarAccount = {
-  publicKey: "GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX",
-  memo: "STLP-2048",
-  network: "Stellar Public Network",
+  publicKey: MOCK_STELLAR_ACCOUNT.publicKey,
+  memo: MOCK_MEMO,
+  network: MOCK_STELLAR_ACCOUNT.network,
 }
 
 export const formatMoney = (amount: number, currency: CurrencyCode, hidden = false): string => {
@@ -165,12 +170,9 @@ export const quickActions = [
 ] as const
 
 export const conversionRates: Record<AssetCode, Record<AssetCode, number>> = {
-  XLM: { XLM: 1, USDC: 0.1185, USDT: 0.1184, NGN: 177.75, USD: 0.1185, EUR: 0.109 },
-  USDC: { XLM: 8.4388, USDC: 1, USDT: 0.9994, NGN: 1500.0, USD: 1.0, EUR: 0.92 },
-  USDT: { XLM: 8.4459, USDC: 1.0006, USDT: 1, NGN: 1500.0, USD: 1.0, EUR: 0.92 },
-  NGN: { XLM: 0.00562, USDC: 0.00067, USDT: 0.00067, NGN: 1, USD: 0.00067, EUR: 0.00061 },
-  USD: { XLM: 8.4388, USDC: 1, USDT: 0.9994, NGN: 1500.0, USD: 1.0, EUR: 0.92 },
-  EUR: { XLM: 9.1743, USDC: 1.087, USDT: 1.087, NGN: 1630.0, USD: 1.087, EUR: 1.0 }
+  XLM: { XLM: 1, USDC: 0.1185, USDT: 0.1184 },
+  USDC: { XLM: 8.4388, USDC: 1, USDT: 0.9994 },
+  USDT: { XLM: 8.4459, USDC: 1.0006, USDT: 1 },
 }
 
 export interface LegacyOffRampMethod {

@@ -134,3 +134,39 @@ export function isValidStellarAddress(address: string): boolean {
   if (!address.startsWith('G')) return false
   return /^G[A-Z0-9]{55}$/i.test(address)
 }
+
+// ── formatRelativeDate ────────────────────────────────────────────────────────
+
+/**
+ * Converts an ISO date string or Date object into a human-readable relative
+ * label (e.g. "Just now", "5 minutes ago", "Yesterday", "Jun 15").
+ * Keeps transaction lists readable without importing heavy date libraries.
+ *
+ * @param date  - ISO string, Unix timestamp (ms), or Date object
+ * @returns     - Relative label string, never throws
+ * @example formatRelativeDate(new Date()) // 'Just now'
+ * @example formatRelativeDate('2024-06-15T09:42:00Z') // 'Jun 15'
+ */
+export function formatRelativeDate(date: Date | string | number): string {
+  try {
+    const d = date instanceof Date ? date : new Date(date)
+    if (!Number.isFinite(d.getTime())) return String(date)
+
+    const now = Date.now()
+    const diffMs = now - d.getTime()
+    const diffSec = Math.floor(diffMs / 1000)
+    const diffMin = Math.floor(diffSec / 60)
+    const diffHr = Math.floor(diffMin / 60)
+    const diffDay = Math.floor(diffHr / 24)
+
+    if (diffSec < 60) return 'Just now'
+    if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`
+    if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`
+    if (diffDay === 1) return 'Yesterday'
+    if (diffDay < 7) return `${diffDay} days ago`
+
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  } catch {
+    return String(date)
+  }
+}

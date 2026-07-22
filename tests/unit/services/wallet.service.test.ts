@@ -1,5 +1,7 @@
 import { WalletService } from '../../../lib/services/wallet.service'
-import { WalletServiceError } from '../../../lib/types'
+import { StellarServiceError, WalletServiceError } from '../../../lib/types'
+import { TEST_STELLAR_ADDRESS } from '../../../lib/fixtures'
+import { db } from '../../../lib/db/mock-db'
 import { InMemorySpanExporter } from '@opentelemetry/sdk-trace-base'
 import { initTracing } from '../../../lib/tracing/tracer'
 
@@ -17,8 +19,8 @@ describe('WalletService', () => {
     describe('getAccountInfo', () => {
         it('should return account info', () => {
             const account = service.getAccountInfo()
-            expect(account.publicKey).toBe('GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX')
-            expect(account.network).toContain('Stellar')
+            expect(account.publicKey).toBe(TEST_STELLAR_ADDRESS)
+            expect(account.isFunded).toBe(true)
         })
     })
 
@@ -34,20 +36,36 @@ describe('WalletService', () => {
 
     describe('validateAddress', () => {
         it('should validate correct Stellar address', () => {
-            const valid = service.validateAddress('GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX')
+            const valid = service.validateAddress(TEST_STELLAR_ADDRESS)
             expect(valid).toBe(true)
         })
 
         it('should reject invalid addresses', () => {
             expect(service.validateAddress('invalid')).toBe(false)
             expect(service.validateAddress('')).toBe(false)
+            expect(service.validateAddress('B' + 'A'.repeat(55))).toBe(false)
+            expect(service.validateAddress('G' + 'A'.repeat(54))).toBe(false)
+            expect(service.validateAddress('G' + '!'.repeat(55))).toBe(false)
+        })
+    })
+
+    describe('generateReceiveAddress', () => {
+        it('should return the mock stellar public key', () => {
+            expect(service.generateReceiveAddress()).toBe(TEST_STELLAR_ADDRESS)
+        })
+    })
+
+    describe('getTransactionHistory', () => {
+        it('should return persisted transactions', async () => {
+            const history = await service.getTransactionHistory()
+            expect(Array.isArray(history)).toBe(true)
         })
     })
 
     describe('shortenKey', () => {
         it('should shorten keys correctly', () => {
-            const shortened = service.shortenKey('GDXSPAYWALLET7QK3MUKXHV2RZ4D6FJ5N2YHV3K2L9P8QW1ZC4T6BNRX')
-            expect(shortened).toBe('GDXSPA…T6BNRX')
+            const shortened = service.shortenKey(TEST_STELLAR_ADDRESS)
+            expect(shortened).toBe('GAAAAA…AAAWHF')
         })
     })
 
@@ -62,9 +80,73 @@ describe('WalletService', () => {
             expect(result.hash).toBeDefined()
         })
 
-        it('should throw error for zero amount', async () => {
-            await expect(service.sendPayment('address', 0, 'XLM'))
+        it('should throw error for invalid destination', async () => {
+            await expect(service.sendPayment('invalid', 10, 'XLM'))
+                .rejects.toThrow(StellarServiceError)
+        })
+
+        it('should throw error for non-positive amount', async () => {
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 0, 'XLM'))
                 .rejects.toThrow(WalletServiceError)
+        })
+
+        it('should throw error when payment verification fails', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: false,
+                json: () => Promise.resolve({ error: 'Verification failed' }),
+            })
+
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 10, 'XLM'))
+                .rejects.toThrow(StellarServiceError)
+        })
+
+        it('should throw a default error when verification response is not JSON', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: false,
+                json: () => Promise.reject(new Error('invalid json')),
+            })
+
+            await expect(service.sendPayment(TEST_STELLAR_ADDRESS, 10, 'XLM'))
+                .rejects.toThrow('Payment verification failed')
+        })
+
+        // Issue #63: the route can report completed/pending/failed depending on
+        // real ledger outcome — the persisted record must reflect that, not
+        // always be hardcoded to 'completed'.
+        it('persists the real hash and status the route reported, not a hardcoded "completed"', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({
+                    success: true,
+                    hash: 'a'.repeat(64),
+                    status: 'pending',
+                }),
+            })
+
+            await service.sendPayment(TEST_STELLAR_ADDRESS, 25, 'XLM')
+
+            const [latest] = await db.getTransactions()
+            expect(latest.status).toBe('pending')
+            expect(latest.stellarHash).toBe('a'.repeat(64))
+        })
+
+        it('persists status "failed" when the route reports a ledger-level rejection', async () => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                json: () => Promise.resolve({
+                    success: false,
+                    hash: 'b'.repeat(64),
+                    status: 'failed',
+                    error: 'Horizon rejected the transaction (HTTP 400): op_underfunded',
+                }),
+            })
+
+            const result = await service.sendPayment(TEST_STELLAR_ADDRESS, 25, 'XLM')
+
+            expect(result.success).toBe(false)
+            const [latest] = await db.getTransactions()
+            expect(latest.status).toBe('failed')
+            expect(latest.stellarHash).toBe('b'.repeat(64))
         })
     })
 

@@ -1,13 +1,22 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
+import { FinanceServicesProvider } from "@/hooks/useFinanceServices"
+import { ActiveAccountProvider } from "@/hooks/useActiveAccount"
 import "./globals.css"
 import "@/lib/tracing/browser-tracer"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
+
+export const viewport: Viewport = {
+  viewportFit: 'cover',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
 
 export const metadata: Metadata = {
   title: "Globe Wallet - Your Money, Borderless",
@@ -47,7 +56,11 @@ export default function RootLayout({
           disableTransitionOnChange
           storageKey="tasko-theme"
         >
-          {children}
+          <FinanceServicesProvider>
+            <ActiveAccountProvider>
+              {children}
+            </ActiveAccountProvider>
+          </FinanceServicesProvider>
         </ThemeProvider>
         <Analytics />
       </body>

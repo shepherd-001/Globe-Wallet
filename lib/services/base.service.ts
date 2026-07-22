@@ -1,5 +1,6 @@
 import { ServiceError, StellarServiceError } from '../types'
 import { withSpan } from '../tracing/tracer'
+import type { Span } from '@opentelemetry/api'
 
 /**
  * Level 2 Architecture Sync: Base Service Abstraction
@@ -17,7 +18,9 @@ export abstract class BaseService {
      * as defined in issue-27.md Error Code Mapping.
      */
     protected handleError(error: any, context: string): never {
-        console.error(`[${this.serviceName}] Error in ${context}:`, error)
+        if (process.env.NODE_ENV !== 'test') {
+            console.error(`[${this.serviceName}] Error in ${context}:`, error)
+        }
 
         if (error instanceof ServiceError) {
             throw error
@@ -33,12 +36,18 @@ export abstract class BaseService {
      * (service.name/operation.name attributes, recorded exceptions, OK/ERROR
      * status) instead of a local console.debug timer with no cross-service
      * correlation — see lib/tracing/tracer.ts for exporter/propagator setup.
+     *
+     * `operation` optionally receives the active span so a caller that awaits
+     * something *before* making a real network call (see wallet.service.ts's
+     * sendPayment) can capture the trace context up front — via
+     * `context.active()` — and forward it explicitly to injectTraceHeaders(),
+     * rather than relying on it still being "active" after an await resumes.
      */
     protected async withPerformanceTracking<T>(
         operationName: string,
-        operation: () => Promise<T>
+        operation: (span: Span) => Promise<T>
     ): Promise<T> {
-        return withSpan(`${this.serviceName}.${operationName}`, () => operation(), {
+        return withSpan(`${this.serviceName}.${operationName}`, (span) => operation(span), {
             'service.name': this.serviceName,
             'operation.name': operationName,
         })

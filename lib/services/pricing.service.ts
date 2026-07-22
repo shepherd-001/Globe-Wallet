@@ -1,17 +1,18 @@
 import { IPricingService, AssetCode, StellarServiceError } from '../types'
-import { cryptoAssets, formatCrypto } from '../finance-data'
+import { MOCK_CRYPTO_ASSETS } from '../fixtures'
+import { formatCryptoAmount } from '../helpers/format'
 import { BaseService } from './base.service'
 
 export class PricingService extends BaseService implements IPricingService {
     private cache: Map<AssetCode, { price: number; timestamp: number }> = new Map()
-    private readonly cacheTTL = 60000 // 1 minute
+    private readonly cacheTTL = 60000
 
     constructor() {
         super('PricingService')
     }
 
     getAssets(): any[] {
-        return [...cryptoAssets]
+        return [...MOCK_CRYPTO_ASSETS]
     }
 
     async getPrice(code: AssetCode): Promise<number> {
@@ -24,7 +25,7 @@ export class PricingService extends BaseService implements IPricingService {
                     return cached.price
                 }
 
-                const asset = cryptoAssets.find(a => a.code === code)
+                const asset = MOCK_CRYPTO_ASSETS.find(a => a.code === code)
                 if (!asset) {
                     throw new StellarServiceError(`Asset ${code} not found`)
                 }
@@ -39,6 +40,6 @@ export class PricingService extends BaseService implements IPricingService {
     }
 
     formatAsset(amount: number, code: AssetCode, hidden = false): string {
-        return formatCrypto(amount, code, hidden)
+        return formatCryptoAmount(amount, code, hidden)
     }
 }

@@ -1,12 +1,13 @@
 import { IAssetService, AssetCode, CryptoAsset, AssetServiceError } from '../types'
-import { cryptoAssets, conversionRates, formatCrypto } from '../finance-data'
+import { MOCK_CRYPTO_ASSETS, MOCK_CONVERSION_RATES } from '../fixtures'
+import { formatCryptoAmount } from '../helpers/format'
 
 export class AssetService implements IAssetService {
   private cache: Map<AssetCode, { price: number; timestamp: number }> = new Map()
-  private readonly cacheTTL = 60000 // 1 minute
+  private readonly cacheTTL = 60000
 
   getAssets(): CryptoAsset[] {
-    return [...cryptoAssets]
+    return MOCK_CRYPTO_ASSETS.map(a => ({ ...a }))
   }
 
   async getAssetPrice(code: AssetCode): Promise<number> {
@@ -17,8 +18,7 @@ export class AssetService implements IAssetService {
       return cached.price
     }
 
-    // Simulate API call with existing mock data
-    const asset = cryptoAssets.find(a => a.code === code)
+    const asset = MOCK_CRYPTO_ASSETS.find(a => a.code === code)
     if (!asset) {
       throw new AssetServiceError(`Asset ${code} not found`)
     }
@@ -29,14 +29,14 @@ export class AssetService implements IAssetService {
   }
 
   convertAsset(from: AssetCode, to: AssetCode, amount: number): number {
-    if (!conversionRates[from] || !conversionRates[from][to]) {
+    if (!MOCK_CONVERSION_RATES[from] || !MOCK_CONVERSION_RATES[from][to]) {
       throw new AssetServiceError(`Conversion rate not available for ${from} to ${to}`)
     }
 
-    return amount * conversionRates[from][to]
+    return amount * MOCK_CONVERSION_RATES[from][to]
   }
 
   formatAsset(amount: number, code: AssetCode, hidden = false): string {
-    return formatCrypto(amount, code, hidden)
+    return formatCryptoAmount(amount, code, hidden)
   }
 }

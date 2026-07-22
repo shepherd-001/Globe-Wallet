@@ -1,20 +1,50 @@
-import { IStellarService, StellarAccount, OffRampMethod, CurrencyCode, StellarServiceError } from '../types'
-import { stellarAccount, offRampMethods, offRampRates, shortenKey } from '../finance-data'
+import { IStellarService, StellarAccount, OffRampMethod, CurrencyCode, StellarServiceError, WalletAccount, ClaimableBalance, TransactionResult } from '../types'
+import { OFF_RAMP_RATES } from '../fixtures'
+import { formatAddress } from '../helpers/format'
+import { db } from '../db/mock-db'
 
+/**
+ * Stellar network helpers. Account-scoped methods accept an optional
+ * `accountId` and default to the active/primary wallet account.
+ */
 export class StellarService implements IStellarService {
-  getAccountInfo(): StellarAccount {
-    return { 
-      ...stellarAccount,
-      name: 'Primary Wallet',
-      network: stellarAccount.network || 'Stellar Public Network',
-      isFunded: true
+  listAccounts(userId?: string): WalletAccount[] {
+    return db.listAccountsSync(userId)
+  }
+
+  getActiveAccountId(): string | null {
+    return db.getActiveAccountSync()?.id ?? null
+  }
+
+  switchAccount(accountId: string): WalletAccount {
+    try {
+      return db.setActiveAccountSync(accountId)
+    } catch (err) {
+      throw new StellarServiceError(
+        err instanceof Error ? err.message : `Unknown wallet account: ${accountId}`,
+      )
     }
   }
 
-  generateReceiveAddress(): string {
-    // In production, this would generate a new receive address
-    // For now, return the mock testnet address
-    return stellarAccount.publicKey
+  getAccountInfo(accountId?: string): StellarAccount {
+    try {
+      const account = db.resolveAccountSync(accountId)
+      return {
+        id: account.id,
+        publicKey: account.publicKey,
+        name: account.name,
+        network: account.network,
+        isFunded: account.isFunded,
+      }
+    } catch (err) {
+      throw new StellarServiceError(
+        err instanceof Error ? err.message : 'No wallet account available',
+      )
+    }
+  }
+
+  generateReceiveAddress(accountId?: string): string {
+    return this.getAccountInfo(accountId).publicKey
   }
 
   validateAddress(address: string): boolean {
@@ -29,7 +59,7 @@ export class StellarService implements IStellarService {
   }
 
   shortenKey(key: string, lead = 6, tail = 6): string {
-    return shortenKey(key, lead, tail)
+    return formatAddress(key, lead, tail)
   }
 
   getOffRampMethods(): OffRampMethod[] {
@@ -68,10 +98,56 @@ export class StellarService implements IStellarService {
   }
 
   getOffRampRate(currency: CurrencyCode): number {
-    const rate = offRampRates[currency]
+    const rate = OFF_RAMP_RATES[currency]
     if (!rate) {
       throw new StellarServiceError(`Off-ramp rate not available for ${currency}`)
     }
     return rate
   }
+
+  // ── Claimable Balances (Issue #99) ───────────────────────────────────────
+
+  listClaimableBalances(accountId?: string): ClaimableBalance[] {
+    try {
+      const account = db.resolveAccountSync(accountId)
+      const balances = db.getClaimableBalancesByAccountSync(account.publicKey)
+      return balances.map(b => ({
+        id: b.id,
+        balanceId: b.balanceId,
+        asset: b.asset,
+        amount: b.amount,
+        claimants: b.claimants.map(c => ({
+          destination: c.destination,
+          predicate: c.predicate ? JSON.parse(c.predicate) as any : undefined,
+        })),
+        sponsor: b.sponsor,
+        status: b.status,
+        createdAt: b.createdAt,
+        memo: b.memo,
+        memoType: b.memoType,
+      }))
+    } catch (err) {
+      throw new StellarServiceError(
+        err instanceof Error ? err.message : 'Failed to list claimable balances',
+      )
+    }
+  }
+
+  claimBalance(balanceId: string, accountId?: string): TransactionResult {
+    try {
+      const account = db.resolveAccountSync(accountId)
+      const result = db.claimClaimableBalanceSync(balanceId, account.publicKey)
+      return result
+    } catch (err) {
+      throw new StellarServiceError(
+        err instanceof Error ? err.message : 'Failed to claim balance',
+      )
+    }
+  }
+
+  hasClaimableBalances(address: string): boolean {
+    const balances = db.getClaimableBalancesByAccountSync(address)
+    return balances.length > 0
+  }
 }
+

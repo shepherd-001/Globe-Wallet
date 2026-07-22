@@ -16,14 +16,20 @@ interface HeaderProps {
 
 export function Header({ title, description, actions }: HeaderProps) {
   return (
-    <header className="space-y-3 md:space-y-4 animate-slide-in-up">
+    <header
+      className="space-y-3 md:space-y-4 animate-slide-in-up"
+      aria-label="Dashboard header"
+      data-testid="dashboard-header"
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-1">
           <MobileNav />
 
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative flex-1 max-w-md" role="search" aria-label="Dashboard search">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
+              id="dashboard-search"
+              aria-label="Search tasks"
               placeholder="Search task"
               className="pl-9 pr-3 md:pr-16 h-9 text-sm bg-card border-border transition-all duration-300 focus:shadow-lg focus:shadow-primary/10"
             />
@@ -38,17 +44,19 @@ export function Header({ title, description, actions }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Open messages"
             className="relative hover:bg-secondary transition-all duration-300 hover:scale-110 h-8 w-8"
           >
-            <Mail className="w-4 h-4" />
+            <Mail className="w-4 h-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
+            aria-label="View notifications"
             className="relative hover:bg-secondary transition-all duration-300 hover:scale-110 h-8 w-8"
           >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-destructive rounded-full animate-pulse" />
+            <Bell className="w-4 h-4" aria-hidden="true" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-destructive rounded-full animate-pulse" aria-hidden="true" />
           </Button>
 
           <div className="flex items-center gap-2 pl-2 md:pl-3 border-l border-border">

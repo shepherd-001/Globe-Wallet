@@ -4,11 +4,12 @@ import { useState } from "react"
 import { Snowflake, Eye, EyeOff, Settings2, Plus, Wifi } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { cards as initialCards, formatMoney } from "@/lib/finance-data"
+import { MOCK_PAYMENT_CARDS } from "@/lib/fixtures"
+import { formatCurrency } from "@/lib/helpers/format"
 import { cn } from "@/lib/utils"
 
 export function CardsView() {
-  const [cards, setCards] = useState(initialCards)
+  const [cards, setCards] = useState(MOCK_PAYMENT_CARDS)
   const [showNumber, setShowNumber] = useState(false)
 
   function toggleFreeze(id: string) {
@@ -42,7 +43,7 @@ export function CardsView() {
               <div className="mt-4 flex items-end justify-between">
                 <div>
                   <p className="text-[10px] opacity-70">Balance</p>
-                  <p className="text-lg font-bold">{formatMoney(card.balance, card.currency)}</p>
+                  <p className="text-lg font-bold">{formatCurrency(card.balance, card.currency)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] opacity-70">Expires {card.expiry}</p>

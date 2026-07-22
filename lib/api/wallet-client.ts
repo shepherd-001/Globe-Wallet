@@ -7,7 +7,7 @@
  * so relative paths work in the browser). Never includes private keys or secrets.
  */
 
-import type { Balance, Transaction, TransactionResult } from '../types'
+import type { Balance, ErrorCode, Transaction, TransactionResult } from '../types'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ export interface RatesResponse {
 
 export interface ApiError {
   error: string
-  code?: string
+  code?: ErrorCode
 }
 
 // ── Client ───────────────────────────────────────────────────────────────────

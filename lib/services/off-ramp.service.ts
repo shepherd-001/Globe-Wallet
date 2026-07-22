@@ -1,5 +1,6 @@
 import { IOffRampService, AssetCode, CurrencyCode, TransactionResult, OffRampMethod, OffRampServiceError } from '../types'
 import { BaseService } from './base.service'
+import { OFF_RAMP_RATES } from '../fixtures'
 
 /**
  * Level 2 Architecture Sync: Off-Ramp Service
@@ -31,11 +32,7 @@ export class OffRampService extends BaseService implements IOffRampService {
     }
 
     async getRates(): Promise<Record<string, number>> {
-        return {
-            'USD': 1.0,
-            'NGN': 1500.0,
-            'EUR': 0.92
-        }
+        return { ...OFF_RAMP_RATES }
     }
 
     getMethods(): OffRampMethod[] {

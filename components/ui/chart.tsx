@@ -232,9 +232,14 @@ function ChartTooltipContent({
                         {itemConfig?.label || item.name}
                       </span>
                     </div>
-                    {item.value && (
+                    {typeof item.value === 'number' && (
                       <span className="text-foreground font-mono font-medium tabular-nums">
                         {item.value.toLocaleString()}
+                      </span>
+                    )}
+                    {typeof item.value === 'string' && item.value && (
+                      <span className="text-foreground font-mono font-medium tabular-nums">
+                        {item.value}
                       </span>
                     )}
                   </div>
@@ -302,38 +307,42 @@ function ChartLegendContent({
   )
 }
 
+/**
+ * Minimal shape that Recharts injects into tooltip/legend payload items.
+ * Using a structural interface keeps this independent of recharts internals
+ * while giving downstream code full type safety.
+ */
+interface RechartsPayloadItem {
+  dataKey?: string | number
+  name?: string | number
+  value?: number | string | (number | string)[]
+  color?: string
+  fill?: string
+  payload?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 // Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
-  payload: unknown,
+  payload: RechartsPayloadItem,
   key: string,
 ) {
-  if (typeof payload !== 'object' || payload === null) {
-    return undefined
-  }
-
   const payloadPayload =
-    'payload' in payload &&
-    typeof payload.payload === 'object' &&
-    payload.payload !== null
+    payload.payload !== null && typeof payload.payload === 'object'
       ? payload.payload
       : undefined
 
   let configLabelKey: string = key
 
-  if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === 'string'
-  ) {
-    configLabelKey = payload[key as keyof typeof payload] as string
+  if (key in payload && typeof payload[key] === 'string') {
+    configLabelKey = payload[key] as string
   } else if (
     payloadPayload &&
     key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === 'string'
+    typeof payloadPayload[key] === 'string'
   ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string
+    configLabelKey = payloadPayload[key] as string
   }
 
   return configLabelKey in config

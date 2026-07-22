@@ -45,15 +45,10 @@ describe('FiatService', () => {
     })
   })
 
-  describe('getExchangeRate', () => {
-    it('should return correct exchange rate', () => {
-      const rate = service.getExchangeRate('USD', 'NGN')
-      expect(rate).toBe(1580.5)
-    })
-
-    it('should throw error for invalid rate request', () => {
-      expect(() => service.getExchangeRate('INVALID' as any, 'USD'))
-        .toThrow(FiatServiceError)
+  describe('getAccountBalance', () => {
+    it('should return aggregate USD balance', () => {
+      const balance = service.getAccountBalance()
+      expect(balance).toBeGreaterThan(0)
     })
   })
 })

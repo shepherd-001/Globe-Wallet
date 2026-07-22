@@ -1,5 +1,5 @@
 import { Contact } from '../types'
-import { contacts as seedContacts } from '../finance-data'
+import { MOCK_CONTACTS } from '../fixtures'
 
 export interface IContactService {
   getContacts(): Contact[]
@@ -10,7 +10,7 @@ export interface IContactService {
 export class ContactService implements IContactService {
   private contacts: Contact[]
 
-  constructor(initial: Contact[] = seedContacts) {
+  constructor(initial: Contact[] = MOCK_CONTACTS) {
     this.contacts = initial
   }
 

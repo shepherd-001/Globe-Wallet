@@ -1,5 +1,6 @@
 import { IFiatService, CurrencyCode, Wallet, FiatServiceError } from '../types'
-import { wallets, formatMoney } from '../finance-data'
+import { MOCK_WALLETS } from '../fixtures'
+import { formatCurrency } from '../helpers/format'
 import { BaseService } from './base.service'
 
 export class FiatService extends BaseService implements IFiatService {
@@ -15,11 +16,11 @@ export class FiatService extends BaseService implements IFiatService {
   }
 
   getWallets(): Wallet[] {
-    return [...wallets]
+    return [...MOCK_WALLETS]
   }
 
   formatMoney(amount: number, currency: CurrencyCode, hidden = false): string {
-    return formatMoney(amount, currency, hidden)
+    return formatCurrency(amount, currency, hidden)
   }
 
   convertCurrency(from: CurrencyCode, to: CurrencyCode, amount: number): number {

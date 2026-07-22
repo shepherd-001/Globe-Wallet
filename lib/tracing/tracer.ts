@@ -146,15 +146,21 @@ export async function withSpan<T>(
 }
 
 /**
- * Injects the active span's W3C trace context (traceparent/tracestate) into
- * outgoing request headers, so the receiving side can continue the trace.
- * With no TracerProvider registered (e.g. Jest), the global propagator is a
- * no-op and this simply returns the headers unchanged.
+ * Injects a span's W3C trace context (traceparent/tracestate) into outgoing
+ * request headers, so the receiving side can continue the trace. With no
+ * TracerProvider registered (e.g. Jest), the global propagator is a no-op
+ * and this simply returns the headers unchanged.
+ *
+ * Defaults to `context.active()`, which is only reliable for the synchronous
+ * portion of a span's callback — this codebase has no Zone.js/AsyncLocalStorage
+ * in the browser, so context does not survive an `await`. A caller that needs
+ * to inject *after* awaiting something should capture `context.active()` at
+ * the top of its span callback (before any await) and pass it explicitly.
  */
-export function injectTraceHeaders(existing: HeadersInit = {}): Headers {
+export function injectTraceHeaders(existing: HeadersInit = {}, ctx: Context = context.active()): Headers {
   const headers = new Headers(existing)
   const carrier: Record<string, string> = {}
-  propagation.inject(context.active(), carrier)
+  propagation.inject(ctx, carrier)
   for (const [key, value] of Object.entries(carrier)) {
     headers.set(key, value)
   }

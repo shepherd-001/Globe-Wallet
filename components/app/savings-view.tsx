@@ -4,7 +4,8 @@ import { TrendingUp, Plus, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { savingsGoals, formatMoney } from "@/lib/finance-data"
+import { MOCK_SAVINGS_GOALS } from "@/lib/fixtures"
+import { formatCurrency } from "@/lib/helpers/format"
 
 export function SavingsView() {
   const totalSavedNgn = 320000 + 1500 * 1600 + 540 * 2000
@@ -15,7 +16,7 @@ export function SavingsView() {
         <div className="flex items-center gap-2 text-xs opacity-80">
           <Target className="h-4 w-4" /> Total saved across vaults
         </div>
-        <p className="mt-1 text-3xl font-bold">{formatMoney(totalSavedNgn, "NGN")}</p>
+        <p className="mt-1 text-3xl font-bold">{formatCurrency(totalSavedNgn, "NGN")}</p>
         <div className="mt-3 flex items-center gap-1.5 text-xs">
           <span className="flex items-center gap-1 rounded-full bg-primary-foreground/15 px-2.5 py-1 font-medium">
             <TrendingUp className="h-3 w-3" /> Earning up to 12% APY
@@ -25,11 +26,11 @@ export function SavingsView() {
 
       <div className="mb-2 mt-6 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">Your vaults</h2>
-        <span className="text-xs text-muted-foreground">{savingsGoals.length} active</span>
+        <span className="text-xs text-muted-foreground">{MOCK_SAVINGS_GOALS.length} active</span>
       </div>
 
       <div className="space-y-3">
-        {savingsGoals.map((goal) => {
+        {MOCK_SAVINGS_GOALS.map((goal) => {
           const pct = Math.round((goal.saved / goal.target) * 100)
           return (
             <Card key={goal.id} className="p-4">
@@ -49,8 +50,8 @@ export function SavingsView() {
               <Progress value={pct} className="mt-3 h-2" />
 
               <div className="mt-2 flex items-center justify-between text-xs">
-                <span className="font-medium text-foreground">{formatMoney(goal.saved, goal.currency)}</span>
-                <span className="text-muted-foreground">of {formatMoney(goal.target, goal.currency)}</span>
+                <span className="font-medium text-foreground">{formatCurrency(goal.saved, goal.currency)}</span>
+                <span className="text-muted-foreground">of {formatCurrency(goal.target, goal.currency)}</span>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">

@@ -1,0 +1,66 @@
+
+> my-v0-project@0.1.0 build
+> next build
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 10.4s
+   Skipping validation of types
+   Collecting page data using 7 workers ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 7 workers (0/29) ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 7 workers (7/29) 
+   Generating static pages using 7 workers (14/29) 
+   Generating static pages using 7 workers (21/29) 
+ ✓ Generating static pages using 7 workers (29/29) in 3.3s
+   Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/a11y
+├ ƒ /api/analytics
+├ ƒ /api/assets
+├ ƒ /api/federation
+├ ƒ /api/health
+├ ƒ /api/issue-27
+├ ƒ /api/off-ramp
+├ ƒ /api/rates
+├ ƒ /api/receive
+├ ƒ /api/send
+├ ƒ /api/shell
+├ ƒ /api/stellar
+├ ƒ /api/transactions
+├ ƒ /api/transactions/sync
+├ ƒ /api/wallet/balances
+├ ƒ /api/wallet/send
+├ ƒ /api/wallet/transactions
+├ ƒ /api/wallets
+├ ○ /cards
+├ ○ /convert
+├ ○ /finance-demo
+├ ○ /off-ramp
+├ ○ /profile
+├ ○ /receive
+├ ○ /savings
+└ ○ /send
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
