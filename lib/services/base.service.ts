@@ -1,4 +1,5 @@
 import { ServiceError, StellarServiceError } from '../types'
+import { withSpan } from '../tracing/tracer'
 
 /**
  * Level 2 Architecture Sync: Base Service Abstraction
@@ -28,18 +29,18 @@ export abstract class BaseService {
     }
 
     /**
-     * Performance tracking for "Next Level" observability
+     * Issue #103: service-boundary tracing. Each call becomes a real OTel span
+     * (service.name/operation.name attributes, recorded exceptions, OK/ERROR
+     * status) instead of a local console.debug timer with no cross-service
+     * correlation — see lib/tracing/tracer.ts for exporter/propagator setup.
      */
     protected async withPerformanceTracking<T>(
         operationName: string,
         operation: () => Promise<T>
     ): Promise<T> {
-        const start = performance.now()
-        try {
-            return await operation()
-        } finally {
-            const end = performance.now()
-            console.debug(`[${this.serviceName}] ${operationName} took ${(end - start).toFixed(2)}ms`)
-        }
+        return withSpan(`${this.serviceName}.${operationName}`, () => operation(), {
+            'service.name': this.serviceName,
+            'operation.name': operationName,
+        })
     }
 }

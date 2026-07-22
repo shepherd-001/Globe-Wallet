@@ -2,6 +2,7 @@ import { IWalletService, StellarAccount, Balance, Transaction, TransactionResult
 import { stellarAccount, cryptoAssets, shortenKey } from '../finance-data'
 import { BaseService } from './base.service'
 import { db } from '../db/mock-db'
+import { injectTraceHeaders } from '../tracing/tracer'
 
 /**
  * Level 2 Architecture Sync: Wallet Service
@@ -44,9 +45,12 @@ export class WalletService extends BaseService implements IWalletService {
 
                 // Call mock API for transaction verification/simulation
                 // Using absolute URL when in non-browser context if needed, but relative works with mock/fetch
+                // Issue #103: propagate the active span's trace context (traceparent/tracestate)
+                // so /api/wallet/send can continue this trace instead of starting a new one.
+                const headers = injectTraceHeaders({ 'Content-Type': 'application/json' })
                 const response = await fetch('/api/wallet/send', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers,
                     body: JSON.stringify({ destination, amount, asset, memo })
                 })
 

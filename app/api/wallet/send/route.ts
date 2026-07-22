@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import type { TransactionResult } from '@/lib/types'
+import { context, extractTraceContext, withSpan } from '@/lib/tracing/tracer'
 
 interface SendBody {
   destination?: string
@@ -17,6 +18,16 @@ interface SendBody {
 }
 
 export async function POST(request: NextRequest) {
+  // Issue #103: continue the caller's trace (from wallet.service.ts's
+  // traceparent header) instead of starting a disconnected server-side trace.
+  const parentContext = extractTraceContext(request.headers)
+
+  return context.with(parentContext, () =>
+    withSpan('api.wallet.send', () => handleSend(request), { 'http.route': '/api/wallet/send' }),
+  )
+}
+
+async function handleSend(request: NextRequest) {
   let body: SendBody = {}
 
   try {
