@@ -4,17 +4,7 @@ import { useState } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import type { ChartDailyDataPoint, ActivityTooltipProps } from "@/lib/types"
 
-const chartData: ChartDailyDataPoint[] = [
-  { day: "S", value: 45, label: "Sunday" },
-  { day: "M", value: 75, label: "Monday" },
-  { day: "T", value: 74, label: "Tuesday" },
-  { day: "W", value: 92, label: "Wednesday" },
-  { day: "T", value: 35, label: "Thursday" },
-  { day: "F", value: 60, label: "Friday" },
-  { day: "S", value: 50, label: "Saturday" },
-]
 
-const barColors: string[] = ["#059669", "#047857", "#10b981", "#065f46", "#059669", "#047857", "#10b981"]
 import { Card } from "@/components/ui/card"
 import {
   ChartContainer,

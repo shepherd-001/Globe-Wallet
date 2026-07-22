@@ -175,6 +175,9 @@ describe('ReceiveForm — issue #22', () => {
 
       mockWallet.generateReceiveAddress.mockReturnValue(TEST_STELLAR_ADDRESS)
       mockWallet.validateAddress.mockReturnValue(true)
+    })
+  })
+
   describe('clipboard/share error handling — issue #9', () => {
     it('shows a fallback message when the clipboard write fails', async () => {
       (navigator.clipboard.writeText as jest.Mock).mockRejectedValueOnce(

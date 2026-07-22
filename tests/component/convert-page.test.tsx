@@ -83,9 +83,9 @@ describe('Convert Page', () => {
       expect(screen.getByRole('heading', { name: 'Convert' })).toBeInTheDocument()
     })
 
-    it('renders the exchange rate card with XLM → USDC as default', () => {
+    it('renders the exchange rate card with XLM → USDC as default', async () => {
       renderPage()
-      expect(screen.getByText(/1 XLM/)).toBeInTheDocument()
+      expect(await screen.findByText(/1 XLM/)).toBeInTheDocument()
     })
 
     it('shows the "From" and "To" labels', () => {
