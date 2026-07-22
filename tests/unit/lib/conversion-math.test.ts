@@ -353,10 +353,11 @@ describe("deriveFromAmount", () => {
         const backStr = deriveToAmount(fromStr, rate);
         const backNum = parseFloat(backStr);
         // Same tolerance as the reverse deriveToAmount test — 6dp string
-        // format introduces ~5e-6 epsilon for near-limit values.
-        // Using toBeLessThanOrEqual to handle boundary cases where
-        // difference exactly equals 1e-5.
-        expect(Math.abs(backNum - amount)).toBeLessThanOrEqual(1e-5);
+        // format introduces epsilon for near-limit values.
+        // In this direction, truncation error is multiplied by rate,
+        // so we scale the tolerance by rate for large rates.
+        const tolerance = Math.max(1e-5, rate * 5e-7);
+        expect(Math.abs(backNum - amount)).toBeLessThanOrEqual(tolerance);
       }
     }
   });
