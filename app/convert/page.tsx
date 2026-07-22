@@ -1,132 +1,150 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { AppShell } from "@/components/app/app-shell"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, ArrowUpDown, TrendingUp, Info, AlertCircle } from "lucide-react"
-import Link from "next/link"
-import { toast } from "sonner"
-import { ratesService, type ExchangeRate } from "@/lib/services/rates.service"
-import type { AssetCode } from "@/lib/types"
+import { useState, useEffect } from "react";
+import { AppShell } from "@/components/app/app-shell";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ArrowLeft,
+  ArrowUpDown,
+  TrendingUp,
+  Info,
+  AlertCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { ratesService, type ExchangeRate } from "@/lib/services/rates.service";
+import type { AssetCode } from "@/lib/types";
+import {
+  deriveToAmount,
+  deriveFromAmount,
+  calculateNetReceived,
+  formatConversionRate,
+} from "@/lib/helpers/conversion-math";
 
 export default function ConvertPage() {
-  const [fromAmount, setFromAmount] = useState("")
-  const [toAmount, setToAmount] = useState("")
-  const [fromCurrency, setFromCurrency] = useState<AssetCode>("XLM")
-  const [toCurrency, setToCurrency] = useState<AssetCode>("USDC")
-  const [isConverting, setIsConverting] = useState(false)
-  const [isLoadingRates, setIsLoadingRates] = useState(true)
-  const [ratesError, setRatesError] = useState<string | null>(null)
-  const [rates, setRates] = useState<ExchangeRate[]>([])
-  
-  const balances: Record<AssetCode, number> = {
+  const [fromAmount, setFromAmount] = useState("");
+  const [toAmount, setToAmount] = useState("");
+  const [fromCurrency, setFromCurrency] = useState<AssetCode>("XLM");
+  const [toCurrency, setToCurrency] = useState<AssetCode>("USDC");
+  const [isConverting, setIsConverting] = useState(false);
+  const [isLoadingRates, setIsLoadingRates] = useState(true);
+  const [ratesError, setRatesError] = useState<string | null>(null);
+  const [rates, setRates] = useState<ExchangeRate[]>([]);
+
+  const balances: Record<string, number> = {
     XLM: 1250.45,
     USDC: 89.32,
     USDT: 156.78,
     NGN: 50000,
     USD: 500,
     EUR: 450,
-  }
+  };
 
   useEffect(() => {
     const fetchRates = async () => {
-      setIsLoadingRates(true)
-      setRatesError(null)
+      setIsLoadingRates(true);
+      setRatesError(null);
       try {
         const fetchedRates = await ratesService.getExchangeRates(fromCurrency, [
           fromCurrency,
           toCurrency,
-        ])
-        setRates(fetchedRates)
+        ]);
+        setRates(fetchedRates);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load exchange rates"
-        setRatesError(message)
-        toast.error("Could not load exchange rates, using cached rates")
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load exchange rates";
+        setRatesError(message);
+        toast.error("Could not load exchange rates, using cached rates");
       } finally {
-        setIsLoadingRates(false)
+        setIsLoadingRates(false);
       }
-    }
+    };
 
-    fetchRates()
-  }, [fromCurrency, toCurrency])
+    fetchRates();
+  }, [fromCurrency, toCurrency]);
 
   const getCurrentRate = () => {
-    return rates.find((r) => r.from === fromCurrency && r.to === toCurrency)
-  }
+    return rates.find((r) => r.from === fromCurrency && r.to === toCurrency);
+  };
 
   const calculateConversion = (amount: string, isFromAmount: boolean) => {
-    const rate = getCurrentRate()?.rate
-    if (!rate || !amount) return ""
-
-    const numAmount = parseFloat(amount)
-    if (isNaN(numAmount)) return ""
+    const rate = getCurrentRate()?.rate;
+    if (!rate || !amount) return "";
 
     if (isFromAmount) {
-      return (numAmount * rate).toFixed(6)
+      return deriveToAmount(amount, rate);
     } else {
-      return (numAmount / rate).toFixed(6)
+      return deriveFromAmount(amount, rate);
     }
-  }
+  };
 
   useEffect(() => {
     if (fromAmount) {
-      setToAmount(calculateConversion(fromAmount, true))
+      setToAmount(calculateConversion(fromAmount, true));
     } else {
-      setToAmount("")
+      setToAmount("");
     }
-  }, [fromAmount, fromCurrency, toCurrency])
-  
+  }, [fromAmount, fromCurrency, toCurrency]);
+
   const handleFromAmountChange = (value: string) => {
-    setFromAmount(value)
-    setToAmount(calculateConversion(value, true))
-  }
-  
+    setFromAmount(value);
+    setToAmount(calculateConversion(value, true));
+  };
+
   const handleToAmountChange = (value: string) => {
-    setToAmount(value)
-    setFromAmount(calculateConversion(value, false))
-  }
-  
+    setToAmount(value);
+    setFromAmount(calculateConversion(value, false));
+  };
+
   const swapCurrencies = () => {
-    setFromCurrency(toCurrency)
-    setToCurrency(fromCurrency)
-    setFromAmount(toAmount)
-  }
-  
+    setFromCurrency(toCurrency);
+    setToCurrency(fromCurrency);
+    setFromAmount(toAmount);
+  };
+
   const handleConvert = async () => {
     if (!fromAmount || parseFloat(fromAmount) <= 0) {
-      toast.error("Please enter a valid amount")
-      return
+      toast.error("Please enter a valid amount");
+      return;
     }
 
-    const balance = balances[fromCurrency]
+    const balance = balances[fromCurrency];
     if (parseFloat(fromAmount) > balance) {
-      toast.error(`Insufficient ${fromCurrency} balance`)
-      return
+      toast.error(`Insufficient ${fromCurrency} balance`);
+      return;
     }
 
-    setIsConverting(true)
+    setIsConverting(true);
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       toast.success(
-        `Successfully converted ${fromAmount} ${fromCurrency} to ${toAmount} ${toCurrency}`
-      )
-      setFromAmount("")
-      setToAmount("")
+        `Successfully converted ${fromAmount} ${fromCurrency} to ${toAmount} ${toCurrency}`,
+      );
+      setFromAmount("");
+      setToAmount("");
     } catch (error) {
-      toast.error("Conversion failed. Please try again.")
+      toast.error("Conversion failed. Please try again.");
     } finally {
-      setIsConverting(false)
+      setIsConverting(false);
     }
-  }
-  
-  const currentRate = getCurrentRate()
+  };
+
+  const currentRate = getCurrentRate();
 
   return (
     <AppShell>
@@ -145,7 +163,9 @@ export default function ConvertPage() {
         {/* Loading state */}
         {isLoadingRates && (
           <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Loading exchange rates...</div>
+            <div className="text-sm text-muted-foreground">
+              Loading exchange rates...
+            </div>
           </Card>
         )}
 
@@ -166,17 +186,22 @@ export default function ConvertPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">
-                    1 {fromCurrency} = {currentRate.rate.toFixed(6)} {toCurrency}
+                    1 {fromCurrency} = {currentRate.rate.toFixed(6)}{" "}
+                    {toCurrency}
                   </span>
                   <TrendingUp
                     className={`h-4 w-4 ${
-                      currentRate.change24h >= 0 ? "text-green-500" : "text-red-500"
+                      currentRate.change24h >= 0
+                        ? "text-green-500"
+                        : "text-red-500"
                     }`}
                   />
                 </div>
                 {currentRate.change24h > 0 && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <span className="text-green-500">+{currentRate.change24h}%</span>
+                    <span className="text-green-500">
+                      +{currentRate.change24h}%
+                    </span>
                     <span>24h change</span>
                   </div>
                 )}
@@ -184,7 +209,7 @@ export default function ConvertPage() {
             </div>
           </Card>
         )}
-        
+
         {/* Conversion Form */}
         <Card className="p-6">
           <div className="space-y-4">
@@ -205,7 +230,12 @@ export default function ConvertPage() {
                     onChange={(e) => handleFromAmountChange(e.target.value)}
                   />
                 </div>
-                <Select value={fromCurrency} onValueChange={(val: string) => setFromCurrency(val as AssetCode)}>
+                <Select
+                  value={fromCurrency}
+                  onValueChange={(val: string) =>
+                    setFromCurrency(val as AssetCode)
+                  }
+                >
                   <SelectTrigger className="w-24" aria-label="From currency">
                     <SelectValue />
                   </SelectTrigger>
@@ -221,13 +251,15 @@ export default function ConvertPage() {
                   variant="ghost"
                   size="sm"
                   className="text-xs h-6 p-1"
-                  onClick={() => handleFromAmountChange(balances[fromCurrency].toString())}
+                  onClick={() =>
+                    handleFromAmountChange(balances[fromCurrency].toString())
+                  }
                 >
                   Use max
                 </Button>
               )}
             </div>
-            
+
             {/* Swap Button */}
             <div className="flex justify-center">
               <Button
@@ -240,7 +272,7 @@ export default function ConvertPage() {
                 <ArrowUpDown className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
-            
+
             {/* To Section */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -258,7 +290,12 @@ export default function ConvertPage() {
                     onChange={(e) => handleToAmountChange(e.target.value)}
                   />
                 </div>
-                <Select value={toCurrency} onValueChange={(val: string) => setToCurrency(val as AssetCode)}>
+                <Select
+                  value={toCurrency}
+                  onValueChange={(val: string) =>
+                    setToCurrency(val as AssetCode)
+                  }
+                >
                   <SelectTrigger className="w-24" aria-label="To currency">
                     <SelectValue />
                   </SelectTrigger>
@@ -272,7 +309,7 @@ export default function ConvertPage() {
             </div>
           </div>
         </Card>
-        
+
         {/* Transaction Details */}
         {fromAmount && toAmount && (
           <Card className="p-4">
@@ -284,7 +321,10 @@ export default function ConvertPage() {
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Exchange Rate</span>
-                  <span>1 {fromCurrency} = {currentRate?.rate.toFixed(6)} {toCurrency}</span>
+                  <span>
+                    1 {fromCurrency} = {currentRate?.rate.toFixed(6)}{" "}
+                    {toCurrency}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Network Fee</span>
@@ -296,13 +336,15 @@ export default function ConvertPage() {
                 </div>
                 <div className="border-t pt-1 mt-2 flex justify-between font-medium">
                   <span>You'll receive</span>
-                  <span>{(parseFloat(toAmount) * 0.999).toFixed(6)} {toCurrency}</span>
+                  <span>
+                    {calculateNetReceived(toAmount).toFixed(6)} {toCurrency}
+                  </span>
                 </div>
               </div>
             </div>
           </Card>
         )}
-        
+
         {/* Convert Button */}
         <Button
           className="w-full"
@@ -319,7 +361,7 @@ export default function ConvertPage() {
         >
           {isConverting ? "Converting..." : "Convert"}
         </Button>
-        
+
         {/* Info Card */}
         <Card className="p-4">
           <div className="space-y-2">
@@ -328,12 +370,14 @@ export default function ConvertPage() {
               How it works
             </div>
             <p className="text-xs text-muted-foreground">
-              Conversions are executed through Stellar's decentralized exchange using automated market makers. 
-              Rates update in real-time based on market conditions. A small network fee is required for each transaction.
+              Conversions are executed through Stellar's decentralized exchange
+              using automated market makers. Rates update in real-time based on
+              market conditions. A small network fee is required for each
+              transaction.
             </p>
           </div>
         </Card>
       </div>
     </AppShell>
-  )
+  );
 }
