@@ -3,28 +3,21 @@
 import { useState, useEffect } from "react"
 import { TrendingUp, TrendingDown, Minus, Users, CheckCircle, Clock, Target, ArrowUpRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-  type ChartConfig,
-} from "@/components/ui/chart"
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts"
+import dynamic from "next/dynamic"
 import type { AnalyticsStat, ChartDataPoint } from "@/lib/types"
 import { buildVolumeHistory, buildCategoryBreakdown } from "@/lib/analytics/chart-data"
 import { MOCK_TRANSACTIONS } from "@/lib/fixtures/transactions"
 
-// ── Static stat definitions for task-completion metrics ──────────────────────
+const VolumeChart = dynamic(
+  () => import("./analytics-charts").then((mod) => mod.VolumeChart),
+  { ssr: false, loading: () => <Card className="p-6 h-[284px] flex items-center justify-center">Loading chart...</Card> }
+)
+const CategoryChart = dynamic(
+  () => import("./analytics-charts").then((mod) => mod.CategoryChart),
+  { ssr: false, loading: () => <Card className="p-6 h-[284px] flex items-center justify-center">Loading chart...</Card> }
+)
+
+// -- Static stat definitions for task-completion metrics ----------------------
 
 interface StatDefinition {
   title: string
@@ -42,22 +35,11 @@ const TASK_STATS: StatDefinition[] = [
   { title: "Avg. Completion Time",   value: "2.3",  subtitle: "days", change: "-0.5", trend: "up", icon: Clock },
 ]
 
-// ── Chart configurations ──────────────────────────────────────────────────────
-
-const volumeChartConfig: ChartConfig = {
-  value: { label: "Volume (USD)", color: "hsl(var(--primary))" },
-}
-
-const categoryChartConfig: ChartConfig = {
-  volume: { label: "Volume",  color: "hsl(var(--primary))" },
-  count:  { label: "Count",   color: "hsl(var(--chart-2))" },
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
+// -- Sub-components ------------------------------------------------------------
 
 function TrendIcon({ trend }: { trend: "up" | "down" | "flat" }) {
-  if (trend === "up")   return <TrendingUp  className="w-3 h-3 text-green-600" />
-  if (trend === "down") return <TrendingDown className="w-3 h-3 text-red-600"  />
+  if (trend === "up")   return <TrendingUp  className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
+  if (trend === "down") return <TrendingDown className="w-3 h-3 text-red-700 dark:text-red-400"  />
   return <Minus className="w-3 h-3 text-muted-foreground" />
 }
 
@@ -68,16 +50,14 @@ function StatCard({ stat, index, hovered, onEnter, onLeave }: {
   onEnter: () => void
   onLeave: () => void
 }) {
-  const trendColor = stat.trend === "up" ? "text-green-600" : stat.trend === "down" ? "text-red-600" : "text-muted-foreground"
+  const trendColor = stat.trend === "up" ? "text-emerald-700 dark:text-emerald-400" : stat.trend === "down" ? "text-red-700 dark:text-red-400" : "text-muted-foreground"
   return (
     <Card
       data-testid={`analytics-stat-${index}`}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
       style={{ animationDelay: `${index * 100}ms` }}
-      className={`bg-card text-foreground p-4 transition-all duration-500 ease-out animate-slide-in-up cursor-pointer ${
-        hovered ? "scale-105 shadow-2xl" : "shadow-lg"
-      }`}
+      className={`bg-card text-foreground p-4 transition-all duration-500 ease-out animate-slide-in-up cursor-pointer ${hovered ? "scale-105 shadow-2xl" : "shadow-lg"}`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -87,9 +67,7 @@ function StatCard({ stat, index, hovered, onEnter, onLeave }: {
           <h3 className="text-xs font-medium opacity-90">{stat.title}</h3>
         </div>
         <div
-          className={`w-6 h-6 rounded-full bg-primary flex items-center justify-center transition-transform duration-300 ${
-            hovered ? "rotate-45" : ""
-          }`}
+          className={`w-6 h-6 rounded-full bg-primary flex items-center justify-center transition-transform duration-300 ${hovered ? "rotate-45" : ""}`}
           aria-hidden="true"
         >
           <ArrowUpRight className="w-3 h-3 text-primary-foreground" />
@@ -107,50 +85,7 @@ function StatCard({ stat, index, hovered, onEnter, onLeave }: {
   )
 }
 
-function VolumeChart({ data }: { data: ChartDataPoint[] }) {
-  return (
-    <Card className="p-6" data-testid="volume-chart">
-      <h3 className="font-semibold text-lg mb-4">Transaction Volume (7 Days)</h3>
-      <ChartContainer config={volumeChartConfig} className="h-52">
-        <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" className="text-muted/20" />
-          <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <Line
-            type="monotone"
-            dataKey="value"
-            stroke="var(--color-value)"
-            strokeWidth={2}
-            dot={{ r: 3, fill: "var(--color-value)" }}
-            activeDot={{ r: 5 }}
-          />
-        </LineChart>
-      </ChartContainer>
-    </Card>
-  )
-}
-
-function CategoryChart({ data }: { data: { name: string; volume: number; count: number }[] }) {
-  return (
-    <Card className="p-6" data-testid="category-chart">
-      <h3 className="font-semibold text-lg mb-4">Transactions by Category</h3>
-      <ChartContainer config={categoryChartConfig} className="h-52">
-        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" className="text-muted/20" />
-          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <ChartLegend content={<ChartLegendContent />} />
-          <Bar dataKey="volume" fill="var(--color-volume)" radius={[4, 4, 0, 0]} maxBarSize={40} />
-          <Bar dataKey="count"  fill="var(--color-count)"  radius={[4, 4, 0, 0]} maxBarSize={40} />
-        </BarChart>
-      </ChartContainer>
-    </Card>
-  )
-}
-
-// ── Main exported component ───────────────────────────────────────────────────
+// -- Main exported component ---------------------------------------------------
 
 export function AnalyticsContent() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
@@ -172,7 +107,6 @@ export function AnalyticsContent() {
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="analytics-content">
-      {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {TASK_STATS.map((stat, index) => (
           <StatCard
@@ -186,7 +120,6 @@ export function AnalyticsContent() {
         ))}
       </div>
 
-      {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <VolumeChart data={volumeData} />
         <CategoryChart data={categoryData} />

@@ -15,7 +15,7 @@ interface UseAnalyticsResult extends UseAnalyticsState {
   refresh: () => Promise<void>
 }
 
-export function useAnalytics(initialInterval: ChartInterval = 'week'): UseAnalyticsResult {
+export function useAnalyticsDashboard(initialInterval: ChartInterval = 'week'): UseAnalyticsResult {
   const [state, setState] = useState<UseAnalyticsState>({
     dashboard: null,
     loading: true,
@@ -59,6 +59,7 @@ export function useAnalytics(initialInterval: ChartInterval = 'week'): UseAnalyt
   )
 
   return { ...state, setInterval, refresh }
+}
 "use client"
 
 import { useCallback, useState } from "react"

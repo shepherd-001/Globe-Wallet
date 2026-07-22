@@ -1,3 +1,5 @@
+import Decimal from 'decimal.js'
+
 /**
  * lib/helpers/conversion-math.ts — Issue #72
  *

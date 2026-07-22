@@ -9,6 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # The app validates these required, non-secret settings at startup.
+      NEXT_PUBLIC_STELLAR_NETWORK: testnet
+      STELLAR_HORIZON_URL: https://horizon-testnet.stellar.org
 
     steps:
     - name: Checkout code
@@ -21,7 +25,17 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci --legacy-peer-deps
+      # This repository does not commit an npm lockfile, so npm ci cannot run.
+      run: npm install --legacy-peer-deps
+
+    - name: Dependency vulnerability gate
+      # Fails on moderate+ advisories unless explicitly allowlisted in
+      # security/npm-audit-allowlist.json with a documented reason.
+      run: npm run audit:gate
+
+    - name: Soroban contract synchronization check
+      # Fails if contracts/soroban-spec.json diverges from the contract source.
+      run: npm run check:soroban-sync
 
     - name: Typecheck and build
       run: npm run build
