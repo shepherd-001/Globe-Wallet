@@ -2,6 +2,8 @@ import { WalletService } from '../../../lib/services/wallet.service'
 import { StellarServiceError, WalletServiceError } from '../../../lib/types'
 import { TEST_STELLAR_ADDRESS } from '../../../lib/fixtures'
 import { db } from '../../../lib/db/mock-db'
+import { InMemorySpanExporter } from '@opentelemetry/sdk-trace-base'
+import { initTracing } from '../../../lib/tracing/tracer'
 
 describe('WalletService', () => {
     let service: WalletService
@@ -145,6 +147,37 @@ describe('WalletService', () => {
             const [latest] = await db.getTransactions()
             expect(latest.status).toBe('failed')
             expect(latest.stellarHash).toBe('b'.repeat(64))
+        })
+    })
+
+    describe('trace propagation (Issue #103)', () => {
+        const exporter = new InMemorySpanExporter()
+
+        beforeAll(() => {
+            initTracing(exporter)
+        })
+
+        beforeEach(() => {
+            exporter.reset()
+        })
+
+        it('propagates a W3C traceparent header on the real /api/wallet/send call', async () => {
+            await service.sendPayment(
+                'GC3G2N7N5LRYX6L5N2YHV3K2L9P8QW1ZC4T6BNRYX7QK3MUKXHV2RZ4D',
+                100,
+                'XLM'
+            )
+
+            const [, init] = (global.fetch as jest.Mock).mock.calls[0]
+            const headers = init.headers as Headers
+            expect(headers.get('traceparent')).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-0[01]$/)
+
+            const spans = exporter.getFinishedSpans()
+            const sendSpan = spans.find((s) => s.name === 'WalletService.sendPayment')
+            expect(sendSpan).toBeDefined()
+
+            const [, traceIdFromHeader] = headers.get('traceparent')!.split('-')
+            expect(traceIdFromHeader).toBe(sendSpan!.spanContext().traceId)
         })
     })
 })

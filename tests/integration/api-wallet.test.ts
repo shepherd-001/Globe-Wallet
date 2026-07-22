@@ -30,6 +30,8 @@ import { GET as balancesGET } from '../../app/api/wallet/balances/route'
 import { POST as sendPOST } from '../../app/api/wallet/send/route'
 import { GET as transactionsGET } from '../../app/api/wallet/transactions/route'
 import { GET as ratesGET } from '../../app/api/rates/route'
+import { InMemorySpanExporter } from '@opentelemetry/sdk-trace-base'
+import { initTracing } from '../../lib/tracing/tracer'
 
 // Throwaway keypair used only to sign in-memory test transactions — never
 // funded, never submitted to a real network.
@@ -284,6 +286,59 @@ describe('Wallet Mock API Routes Integration', () => {
 
       expect(response.status).toBe(400)
       expect(data).toHaveProperty('error', 'Invalid JSON body')
+    })
+
+    describe('trace propagation (Issue #103)', () => {
+      const exporter = new InMemorySpanExporter()
+
+      beforeAll(() => {
+        initTracing(exporter)
+      })
+
+      beforeEach(() => {
+        exporter.reset()
+      })
+
+      it('continues the caller trace from an incoming traceparent header instead of starting a new one', async () => {
+        const callerTraceId = '4bf92f3577b34da6a3ce929d0e0e4736'
+        const callerSpanId = '00f067aa0ba902b7'
+        const traceparent = `00-${callerTraceId}-${callerSpanId}-01`
+
+        const request = new NextRequest('http://localhost/api/wallet/send', {
+          method: 'POST',
+          headers: { traceparent, Authorization: 'Bearer test-token' },
+          body: JSON.stringify({
+            destination: validAddr,
+            amount: 25,
+            asset: 'XLM',
+          }),
+        })
+
+        const response = await sendPOST(request)
+        expect(response.status).toBe(200)
+
+        const spans = exporter.getFinishedSpans()
+        const serverSpan = spans.find((s) => s.name === 'api.wallet.send')
+        expect(serverSpan).toBeDefined()
+        expect(serverSpan!.spanContext().traceId).toBe(callerTraceId)
+        expect(serverSpan!.parentSpanContext?.spanId).toBe(callerSpanId)
+      })
+
+      it('starts a fresh trace when no traceparent header is present', async () => {
+        const request = new NextRequest('http://localhost/api/wallet/send', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer test-token' },
+          body: JSON.stringify({ destination: validAddr, amount: 25, asset: 'XLM' }),
+        })
+
+        const response = await sendPOST(request)
+        expect(response.status).toBe(200)
+
+        const spans = exporter.getFinishedSpans()
+        const serverSpan = spans.find((s) => s.name === 'api.wallet.send')
+        expect(serverSpan).toBeDefined()
+        expect(serverSpan!.parentSpanContext).toBeUndefined()
+      })
     })
   })
 })

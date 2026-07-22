@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { FinanceServicesProvider } from "@/hooks/useFinanceServices"
 import { ActiveAccountProvider } from "@/hooks/useActiveAccount"
 import "./globals.css"
+import "@/lib/tracing/browser-tracer"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })

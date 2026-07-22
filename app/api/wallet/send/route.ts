@@ -6,6 +6,7 @@ import { ErrorCodes, apiError } from '@/lib/errors'
 import { SUPPORTED_STELLAR_ASSETS } from '@/lib/fixtures'
 import { db } from '@/lib/db/mock-db'
 import { getStellarPaymentService, StellarPaymentConfigError } from '@/lib/services/stellar-payment.service'
+import { context, extractTraceContext, withSpan } from '@/lib/tracing/tracer'
 
 interface SendBody {
   destination?: string
@@ -19,6 +20,16 @@ interface SendBody {
 const MAX_MEMO_BYTES = 28
 
 export async function POST(request: NextRequest) {
+  // Issue #103: continue the caller's trace (from wallet.service.ts's
+  // traceparent header) instead of starting a disconnected server-side trace.
+  const parentContext = extractTraceContext(request.headers)
+
+  return context.with(parentContext, () =>
+    withSpan('api.wallet.send', () => handleSend(request), { 'http.route': '/api/wallet/send' }),
+  )
+}
+
+async function handleSend(request: NextRequest) {
   if (!validateBearerToken(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

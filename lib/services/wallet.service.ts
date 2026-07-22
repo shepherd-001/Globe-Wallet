@@ -3,6 +3,7 @@ import { MOCK_CRYPTO_ASSETS, SUPPORTED_STELLAR_ASSETS } from '../fixtures'
 import { formatAddress } from '../helpers/format'
 import { BaseService } from './base.service'
 import { db } from '../db/mock-db'
+import { context, injectTraceHeaders } from '../tracing/tracer'
 
 /**
  * Level 2 Architecture Sync: Wallet Service
@@ -139,6 +140,14 @@ export class WalletService extends BaseService implements IWalletService {
 
     async sendPayment(destination: string, amount: number, asset: AssetCode, memo?: string, accountId?: string): Promise<TransactionResult> {
         return this.withPerformanceTracking('sendPayment', async () => {
+            // Issue #103: captured synchronously, before the first `await` below —
+            // this codebase has no Zone.js/AsyncLocalStorage in the browser, so
+            // context.active() would no longer reflect this span once we resume
+            // after awaiting. Capturing it now and forwarding it explicitly to
+            // injectTraceHeaders() keeps propagation correct regardless of how
+            // many awaits happen in between.
+            const traceContext = context.active()
+
             try {
                 await db.resolveAccount(accountId)
 
@@ -150,9 +159,12 @@ export class WalletService extends BaseService implements IWalletService {
                     throw new StellarServiceError("Invalid destination address")
                 }
 
+                // Propagate the captured trace context (traceparent/tracestate) so
+                // /api/wallet/send can continue this trace instead of starting a new one.
+                const headers = injectTraceHeaders({ 'Content-Type': 'application/json' }, traceContext)
                 const response = await fetch('/api/wallet/send', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers,
                     body: JSON.stringify({ destination, amount, asset, memo, accountId })
                 })
 
