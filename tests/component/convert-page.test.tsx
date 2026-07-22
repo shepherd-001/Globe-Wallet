@@ -130,8 +130,9 @@ describe('Convert Page', () => {
       await user.type(fromInput, '100')
 
       const toInput = getToInput()
+      // Rate for XLM→USDC = 0.1185, so 100 * 0.1185 = 11.850000
       await waitFor(() => {
-        expect(toInput).toHaveValue(9.5)
+        expect((toInput as HTMLInputElement).value).toBe("11.850000")
       })
     })
 
