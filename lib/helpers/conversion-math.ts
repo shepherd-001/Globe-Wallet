@@ -27,7 +27,7 @@ import Decimal from 'decimal.js'
  *   Always use testnet credentials in development; never commit mainnet keys.
  */
 
-import Decimal from "decimal.js";
+
 
 // ── Configuration ────────────────────────────────────────────────────────────
 

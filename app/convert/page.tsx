@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,6 +19,8 @@ import {
   TrendingUp,
   Info,
   AlertCircle,
+  Settings2,
+  Route,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -40,6 +42,14 @@ export default function ConvertPage() {
   const [isLoadingRates, setIsLoadingRates] = useState(true);
   const [ratesError, setRatesError] = useState<string | null>(null);
   const [rates, setRates] = useState<ExchangeRate[]>([]);
+  
+  // Missing state variables for JSX
+  const [showSlippageSettings, setShowSlippageSettings] = useState(false);
+  const [slippageTolerance, setSlippageTolerance] = useState(1);
+  const [quote, setQuote] = useState<any>(null);
+  const [isLoadingQuote, setIsLoadingQuote] = useState(false);
+  const [isNoPathError, setIsNoPathError] = useState(false);
+  const [isNetworkError, setIsNetworkError] = useState(false);
 
   const balances: Record<string, number> = {
     XLM: 1250.45,
